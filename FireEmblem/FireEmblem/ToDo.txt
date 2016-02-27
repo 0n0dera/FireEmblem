@@ -1,0 +1,5 @@
+******************* TODO LIST ***********************
+
+- Create window/init SDL
+- Create a basic level map and one character with sprites.
+- Implement FireEmblem-style movement.
