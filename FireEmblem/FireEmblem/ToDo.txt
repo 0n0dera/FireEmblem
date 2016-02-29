@@ -1,5 +1,6 @@
 ******************* TODO LIST ***********************
 
-- Create window/init SDL
-- Create a basic level map and one character with sprites.
-- Implement FireEmblem-style movement.
+(DONE) - Create window/init SDL
+- Create background and implement scrolling
+- Create sprite atlas and find sprite dimensions, set class constants to represent these dimensions
+- Create Character class -> Player class

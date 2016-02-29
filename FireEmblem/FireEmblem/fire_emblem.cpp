@@ -2,18 +2,18 @@
 //
 
 #include "stdafx.h"
-#include "Game.h"
+#include "game.h"
 
 int main()
 {
 	Game game;
 
-	game.init();
-
-	game.main_loop();
-
-	game.clean();
-
-    return 0;
+	if (game.init())
+	{
+		game.main_loop();
+		game.clean();
+	}
+	
+	return 0;
 }
 
