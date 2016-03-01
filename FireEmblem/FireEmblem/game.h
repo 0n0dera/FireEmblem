@@ -1,10 +1,11 @@
 #pragma once
+#include "scene.h"
+#include "camera.h"
+#include "current_tile.h"
+
 class Game
 {
 public:
-	// public member variables
-
-	// public methods
 	Game();
 	~Game();
 	bool init();
@@ -12,26 +13,23 @@ public:
 	void clean();
 
 private:
-	// private member 
-	const std::string COMMON_LEVEL_MAP_PATH;
-	int m_level = 1;
-	bool m_is_running = false;
-	bool m_is_fullscreen = false;
-	SDL_Surface*  m_screen;
-	SDL_Window*   m_window;
-	SDL_Renderer* m_renderer;
-	SDL_Texture*  m_level_map;
-
-	// private methods
 	void change_level();
-	void draw_level_map();
 	void handle_events();
 	void update();
 	void draw();
 	void quit();
 	void toggle_fullscreen();
-};
+	void highlight_cur_tile();
+	void inc_cur_tile_x(int amount);
+	void inc_cur_tile_y(int amount);
 
-extern const int TILE_SIZE;
-extern const int SCREEN_WIDTH;
-extern const int SCREEN_HEIGHT;
+	int level_;
+	bool is_running_;
+	bool is_fullscreen_;
+	SDL_Surface*  screen_;
+	SDL_Window*   window_;
+	SDL_Renderer* renderer_;
+	Scene scene_;
+	Camera camera_;
+	CurrentTile current_tile_;
+};

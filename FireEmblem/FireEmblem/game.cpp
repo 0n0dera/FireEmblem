@@ -2,11 +2,8 @@
 #include "game.h"
 #include "sprite_sheet.h"
 
-const int SCREEN_WIDTH = 870;
-const int SCREEN_HEIGHT = 600;
-const int TILE_SIZE = 30;
 
-Game::Game():COMMON_LEVEL_MAP_PATH("Levels/level_map_"), m_window(NULL), m_screen(NULL),m_renderer(NULL),m_level_map(NULL)
+Game::Game():level_(1), is_running_(false),is_fullscreen_(false), window_(NULL), screen_(NULL),renderer_(NULL),scene_(),camera_(),current_tile_()
 {
 }
 
@@ -21,17 +18,17 @@ bool Game::init()
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	// get window, screen, renderer pointers
-	m_window = SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-	m_screen = SDL_GetWindowSurface(m_window);
-	m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
+	window_ = SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+	screen_ = SDL_GetWindowSurface(window_);
+	renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
 
 	// load background level
-	texture::load_texture_from_file(COMMON_LEVEL_MAP_PATH + std::to_string(m_level) + ".png", m_level_map, m_renderer);
-	
-	// load sprite sheets
-	SpriteSheet::init_sprites(m_renderer);
+	scene_.change_level_map(level_,renderer_);
 
-	m_is_running = true;
+	// load sprite sheets
+	SpriteSheet::init_sprites(renderer_);
+
+	is_running_ = true;
 	std::cout << "Game initialized successfully." << std::endl;
 
 	return true;
@@ -39,20 +36,28 @@ bool Game::init()
 
 void Game::main_loop()
 {
-	while (m_is_running)
+	uint32_t next_game_tick = SDL_GetTicks();
+	int loops;
+
+	while (is_running_)
 	{
 		handle_events();
-		update();
+		loops = 0;
+		while(SDL_GetTicks() > next_game_tick && loops < globals.MAX_FRAMESKIP)
+		{
+			update();
+			next_game_tick += globals.SKIP_TICKS;
+			loops++;
+		}
 		draw();
 	}
 }
 
 void Game::clean()
 {
-	SDL_FreeSurface(m_screen);
-	SDL_DestroyWindow(m_window);
-	SDL_DestroyTexture(m_level_map);
-	SDL_DestroyRenderer(m_renderer);
+	SDL_FreeSurface(screen_);
+	SDL_DestroyWindow(window_);
+	SDL_DestroyRenderer(renderer_);
 	SDL_Quit();
 }
 
@@ -77,6 +82,18 @@ void Game::handle_events()
 					//case SDLK_F4:
 					//	toggle_fullscreen();
 					//	break;
+					case SDLK_DOWN:
+						inc_cur_tile_y(globals.TILE_SIZE);
+						break;
+					case SDLK_UP:
+						inc_cur_tile_y(-globals.TILE_SIZE);
+						break;
+					case SDLK_RIGHT:
+						inc_cur_tile_x(globals.TILE_SIZE);
+						break;
+					case SDLK_LEFT:
+						inc_cur_tile_x(-globals.TILE_SIZE);
+						break;
 				}
 				break;
 
@@ -90,37 +107,75 @@ void Game::update()
 
 void Game::draw()
 {
-	draw_level_map();
-}
-
-void Game::draw_level_map()
-{
-	SDL_RenderClear(m_renderer);
-	SDL_RenderCopy(m_renderer, m_level_map, NULL, NULL);
-	for (int i = 0; i < SCREEN_WIDTH; i += TILE_SIZE)
-	{
-		SDL_RenderDrawLine(m_renderer, i, 0, i, SCREEN_HEIGHT);
-		SDL_RenderDrawLine(m_renderer, 0, i, SCREEN_WIDTH, i);
-	}
-	SDL_RenderPresent(m_renderer);
+	scene_.draw_level_map(camera_, renderer_);
+	highlight_cur_tile();
+	SDL_RenderPresent(renderer_);
 }
 
 
 void Game::quit()
 {
-	m_is_running = false;
+	is_running_ = false;
 }
 
 void Game::toggle_fullscreen()
 {
-	if (!m_is_fullscreen)
-		SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+	if (!is_fullscreen_)
+		SDL_SetWindowFullscreen(window_, SDL_WINDOW_FULLSCREEN_DESKTOP);
 	else
-		SDL_SetWindowFullscreen(m_window, 0);
-	m_is_fullscreen = !m_is_fullscreen;
+		SDL_SetWindowFullscreen(window_, 0);
+	is_fullscreen_ = !is_fullscreen_;
 }
 
 void Game::change_level()
 {
 }
 
+void Game::highlight_cur_tile()
+{
+	SDL_SetRenderDrawColor(renderer_,255,0,0,255);
+	SDL_Rect cur_tile_rect = {current_tile_.get_screen_x(),current_tile_.get_screen_y(),globals.TILE_SIZE,globals.TILE_SIZE};
+	SDL_RenderDrawRect(renderer_, &cur_tile_rect);
+}
+
+void Game::inc_cur_tile_x(int amount)
+{
+	int new_tile_x = current_tile_.get_actual_x() + amount;
+	if (new_tile_x < scene_.get_level_map_width() && new_tile_x >= 0)
+	{
+		if (new_tile_x >= camera_.get_camera_x_bound())
+		{
+			camera_.inc_camera_x();
+		}
+		else if (new_tile_x < camera_.get_camera_x())
+		{
+			camera_.dec_camera_x();
+		}
+		else
+		{
+			current_tile_.inc_screen_x(amount);
+		}
+		current_tile_.inc_actual_x(amount);
+	}
+}
+
+void Game::inc_cur_tile_y(int amount)
+{
+	int new_tile_y = current_tile_.get_actual_y() + amount;
+	if (new_tile_y < scene_.get_level_map_height() && new_tile_y >= 0)
+	{
+		if (new_tile_y >= camera_.get_camera_y_bound())
+		{
+			camera_.inc_camera_y();
+		}
+		else if (new_tile_y < camera_.get_camera_y())
+		{
+			camera_.dec_camera_y();
+		}
+		else
+		{
+			current_tile_.inc_screen_y(amount);
+		}
+		current_tile_.inc_actual_y(amount);
+	}
+}

@@ -6,12 +6,11 @@
 #pragma once
 
 #include "targetver.h"
-
+#include "globals.h"
 #include <stdio.h>
 #include <tchar.h>
 #include <SDL.h>
 #include <SDL_image.h>
-#include <SDL_ttf.h>
 #include <iostream>
 #include <string>
 #include "texture_load_texture.h"
