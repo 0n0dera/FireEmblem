@@ -12,19 +12,19 @@ public:
 	void clean();
 
 private:
-	// private member variables
-	const static std::string COMMON_LEVEL_MAP_PATH;
-	int m_level;
-	bool m_is_running;
-	bool m_is_fullscreen;
+	// private member 
+	const std::string COMMON_LEVEL_MAP_PATH;
+	int m_level = 1;
+	bool m_is_running = false;
+	bool m_is_fullscreen = false;
 	SDL_Surface*  m_screen;
 	SDL_Window*   m_window;
 	SDL_Renderer* m_renderer;
 	SDL_Texture*  m_level_map;
-	SpriteSheet m_sprite_sheet;
 
 	// private methods
 	void change_level();
+	void draw_level_map();
 	void handle_events();
 	void update();
 	void draw();
@@ -32,3 +32,6 @@ private:
 	void toggle_fullscreen();
 };
 
+extern const int TILE_SIZE;
+extern const int SCREEN_WIDTH;
+extern const int SCREEN_HEIGHT;

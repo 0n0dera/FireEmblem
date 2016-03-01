@@ -2,9 +2,11 @@
 #include "game.h"
 #include "sprite_sheet.h"
 
-const std::string COMMON_LEVEL_MAP_PATH = "Levels/level_map_";
+const int SCREEN_WIDTH = 870;
+const int SCREEN_HEIGHT = 600;
+const int TILE_SIZE = 30;
 
-Game::Game() : m_is_running(false), m_is_fullscreen(false), m_screen(NULL), m_window(NULL), m_level(1), m_sprite_sheet(NULL)
+Game::Game():COMMON_LEVEL_MAP_PATH("Levels/level_map_"), m_window(NULL), m_screen(NULL),m_renderer(NULL),m_level_map(NULL)
 {
 }
 
@@ -19,16 +21,16 @@ bool Game::init()
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	// get window, screen, renderer pointers
-	m_window = SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN);
+	m_window = SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 	m_screen = SDL_GetWindowSurface(m_window);
 	m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
 
 	// load background level
-	texture::load_texture_from_file(COMMON_LEVEL_MAP_PATH + std::to_string(level) + ".png", m_level_map, m_renderer);
-
-	// load sprite atlas
-	m_sprite_sheet = new SpriteSheet(m_renderer);
+	texture::load_texture_from_file(COMMON_LEVEL_MAP_PATH + std::to_string(m_level) + ".png", m_level_map, m_renderer);
 	
+	// load sprite sheets
+	SpriteSheet::init_sprites(m_renderer);
+
 	m_is_running = true;
 	std::cout << "Game initialized successfully." << std::endl;
 
@@ -49,6 +51,8 @@ void Game::clean()
 {
 	SDL_FreeSurface(m_screen);
 	SDL_DestroyWindow(m_window);
+	SDL_DestroyTexture(m_level_map);
+	SDL_DestroyRenderer(m_renderer);
 	SDL_Quit();
 }
 
@@ -86,7 +90,21 @@ void Game::update()
 
 void Game::draw()
 {
+	draw_level_map();
 }
+
+void Game::draw_level_map()
+{
+	SDL_RenderClear(m_renderer);
+	SDL_RenderCopy(m_renderer, m_level_map, NULL, NULL);
+	for (int i = 0; i < SCREEN_WIDTH; i += TILE_SIZE)
+	{
+		SDL_RenderDrawLine(m_renderer, i, 0, i, SCREEN_HEIGHT);
+		SDL_RenderDrawLine(m_renderer, 0, i, SCREEN_WIDTH, i);
+	}
+	SDL_RenderPresent(m_renderer);
+}
+
 
 void Game::quit()
 {
