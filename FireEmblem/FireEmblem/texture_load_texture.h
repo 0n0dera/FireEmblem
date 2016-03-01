@@ -3,7 +3,7 @@
 namespace texture
 {
 
-bool load_texture_from_file(const std::string path, SDL_Texture*& texture, SDL_Renderer* renderer)
+inline bool load_texture_from_file(const std::string path, SDL_Texture*& texture, SDL_Renderer* renderer)
 {
 	bool success = true;
 	SDL_Surface* loaded_surface = IMG_Load(path.c_str());
@@ -14,7 +14,7 @@ bool load_texture_from_file(const std::string path, SDL_Texture*& texture, SDL_R
 	}
 	else
 	{
-		texture = SDL_CreateTextureFromSurface(renderer, texture);
+		texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
 		SDL_FreeSurface(loaded_surface);
 	}
 	return success;
