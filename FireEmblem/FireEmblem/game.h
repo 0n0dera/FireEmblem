@@ -2,6 +2,7 @@
 #include "scene.h"
 #include "camera.h"
 #include "current_tile.h"
+#include "player.h"
 
 class Game
 {
@@ -13,6 +14,7 @@ public:
 	void clean();
 
 private:
+	enum GameState{ none, player_select, player_move, player_attack, player_done, fight, enemy_move };
 	void change_level();
 	void handle_events();
 	void update();
@@ -22,8 +24,12 @@ private:
 	void highlight_cur_tile();
 	void inc_cur_tile_x(int amount);
 	void inc_cur_tile_y(int amount);
+	void handle_z_press();
+	void move_player();
+	void after_player_move();
 
 	int level_;
+	GameState game_state_;
 	bool is_running_;
 	bool is_fullscreen_;
 	SDL_Surface*  screen_;
@@ -32,4 +38,6 @@ private:
 	Scene scene_;
 	Camera camera_;
 	CurrentTile current_tile_;
+	std::vector<Player> player_vector_;
+	Player* current_player_p_;
 };

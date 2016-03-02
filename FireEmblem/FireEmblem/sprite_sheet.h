@@ -4,6 +4,10 @@ class SpriteSheet
 {
 
 public:
+	const static int kPlayerSpriteStartX = globals.SPRITE_SIZE * 4;
+	const static int kEnemySpriteStartX = 0;
+	const static int kAnimationFrames = 4;
+
 	~SpriteSheet();
 	static void init_sprites(SDL_Renderer* renderer);
 	

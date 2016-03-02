@@ -1,6 +1,11 @@
 ******************* TODO LIST ***********************
 
-(DONE) - Create window/init SDL
-- Create background and implement scrolling
-- Create sprite atlas and find sprite dimensions, set class constants to represent these dimensions
-- Create Character class -> Player class
+(DONE) Create window/init SDL
+(DONE) Create background and implement scrolling
+(DONE) Create sprite atlas and find sprite dimensions, set class constants to represent these dimensions
+(DONE) Create Character class -> Player class
+- Create array to hold characters, only draw the characters that the camera sees 
+  (have vector of players/enemies and iterate through)
+
+Anna
+Chrom

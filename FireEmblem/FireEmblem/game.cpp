@@ -3,7 +3,7 @@
 #include "sprite_sheet.h"
 
 
-Game::Game():level_(1), is_running_(false),is_fullscreen_(false), window_(NULL), screen_(NULL),renderer_(NULL),scene_(),camera_(),current_tile_()
+Game::Game():level_(1), is_running_(false),is_fullscreen_(false), window_(NULL), screen_(NULL),renderer_(NULL),scene_(),camera_(),current_tile_(),current_player_p_(NULL),game_state_(none),player_vector_(std::vector<Player>())
 {
 }
 
@@ -27,6 +27,9 @@ bool Game::init()
 
 	// load sprite sheets
 	SpriteSheet::init_sprites(renderer_);
+
+	// load players
+	player_vector_.push_back(Player(0,0));
 
 	is_running_ = true;
 	std::cout << "Game initialized successfully." << std::endl;
@@ -72,8 +75,12 @@ void Game::handle_events()
 			case SDL_QUIT:
 				quit();
 				break;
-				
+			
 			case SDL_KEYDOWN:
+				if (game_state_ == player_move)
+				{
+					break;
+				}
 				switch (event.key.keysym.sym)
 				{
 					case SDLK_ESCAPE:
@@ -94,6 +101,8 @@ void Game::handle_events()
 					case SDLK_LEFT:
 						inc_cur_tile_x(-globals.TILE_SIZE);
 						break;
+					case SDLK_z:
+						handle_z_press();
 				}
 				break;
 
@@ -103,12 +112,24 @@ void Game::handle_events()
 
 void Game::update()
 {
+	if (game_state_ == player_move)
+		move_player();
 }
 
 void Game::draw()
 {
 	scene_.draw_level_map(camera_, renderer_);
-	highlight_cur_tile();
+
+	for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
+	{
+		if ((*it).get_x() >= camera_.get_camera_x() && (*it).get_x() < camera_.get_camera_x_bound() && (*it).get_y() >= camera_.get_camera_y() && (*it).get_y() < camera_.get_camera_y_bound())
+			(*it).draw(camera_,renderer_);
+	}
+
+	if (game_state_ != player_move)
+	{
+		highlight_cur_tile();
+	}
 	SDL_RenderPresent(renderer_);
 }
 
@@ -178,4 +199,67 @@ void Game::inc_cur_tile_y(int amount)
 		}
 		current_tile_.inc_actual_y(amount);
 	}
+}
+
+void Game::handle_z_press()
+{
+	switch (game_state_)
+	{
+		case none:
+			for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
+			{
+				if (current_tile_.get_actual_x() == (*it).get_x() && current_tile_.get_actual_y() == (*it).get_y())
+				{
+					game_state_ = player_select;
+					current_player_p_ = &(*it);
+					current_player_p_->set_state(Character::selected);
+					break;
+				}
+			}
+			break;
+		case player_select:
+			game_state_ = player_move;
+			break;
+		case player_done:
+			game_state_ = none;
+			current_player_p_->set_state(Character::idle);
+			break;
+	}
+}
+
+void Game::move_player()
+{
+	int x_diff = current_player_p_->get_x() - current_tile_.get_actual_x();
+	int y_diff = current_player_p_->get_y() - current_tile_.get_actual_y();
+
+	if (x_diff == 0 && y_diff == 0)
+	{
+		after_player_move();
+		return;
+	}
+
+	if (x_diff < 0)
+	{
+		current_player_p_->set_state(Character::move_right);
+	}
+	else if (x_diff > 0)
+	{
+		current_player_p_->set_state(Character::move_left);
+	}
+	else if (y_diff < 0)
+	{
+		current_player_p_->set_state(Character::move_down);
+	}
+	else if (y_diff > 0)
+	{
+		current_player_p_->set_state(Character::move_up);
+	}
+	
+	current_player_p_->move();
+}
+
+void Game::after_player_move()
+{
+	game_state_ = player_done;
+	current_player_p_->set_state(Character::selected);
 }
