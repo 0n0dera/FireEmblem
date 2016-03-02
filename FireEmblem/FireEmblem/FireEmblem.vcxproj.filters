@@ -43,13 +43,13 @@
     <ClInclude Include="camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="character.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="current_tile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="player.h">
+    <ClInclude Include="Characters\character.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Characters\swordsman.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -75,13 +75,13 @@
     <ClCompile Include="camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="character.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="current_tile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="player.cpp">
+    <ClCompile Include="Characters\character.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Characters\swordsman.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,38 +1,51 @@
 #pragma once
-#include "camera.h"	
+#include "../camera.h"	
 
 class Character
 {
 
 public:
 	enum CharacterState { idle = 0, selected = 4, move_up = 5, move_right = 3, move_down = 4, move_left = 2, attacking = 1 };
-	Character(int x, int y);
+	Character(int x, int y, int num_steps, int attack_range, bool is_player, int y_start);
 	virtual ~Character(void) = 0;
+	// getters and setters
 	int get_x() const;
 	int get_y() const;
 	int get_tex_x() const;
 	int get_tex_y() const;
 	void set_x(int new_x);
 	void set_y(int new_y);
-	virtual void draw(const Camera& camera, SDL_Renderer* renderer) = 0;
-	virtual void move() = 0;
+	// draw method to override
+	void draw(const Camera& camera, SDL_Renderer* renderer);
 	void count_anim_delay();
-	void inc_frame();
+	// move methods
+	void move();
 	int get_frame() const;
 	int get_state() const;
 	void set_state(CharacterState state);
 	int get_anim_delay() const;
+	int get_num_steps() const;
+	int get_attack_range() const;
+	int get_sprite_y_start() const;
+	bool is_turn_done() const;
+	void set_turn_done(bool val);
 
 	int last_anim_frame_time_;
 
 private:
 
+	void inc_frame();
+
 	int x_;
 	int y_;
 	int frame_;
 	int anim_delay_;
-
+	int num_steps_;
+	int attack_range_;
 	CharacterState state_;
+	bool is_player_;
+	int sprite_y_start_;
+	bool turn_done_;
 };
 
 
@@ -78,4 +91,29 @@ inline void Character::set_state(CharacterState state)
 inline int Character::get_anim_delay() const
 {
 	return anim_delay_;
+}
+
+inline int Character::get_num_steps() const
+{
+	return num_steps_;
+}
+
+inline int Character::get_attack_range() const
+{
+	return attack_range_;
+}
+
+inline int Character::get_sprite_y_start() const
+{
+	return sprite_y_start_;
+}
+
+inline bool Character::is_turn_done() const
+{
+	return turn_done_;
+}
+
+inline void Character::set_turn_done(bool val)
+{
+	turn_done_ = val;
 }

@@ -1,9 +1,14 @@
 #include "stdafx.h"
 #include "game.h"
 #include "sprite_sheet.h"
+#include "Characters/swordsman.h"
 
-
-Game::Game():level_(1), is_running_(false),is_fullscreen_(false), window_(NULL), screen_(NULL),renderer_(NULL),scene_(),camera_(),current_tile_(),current_player_p_(NULL),game_state_(none),player_vector_(std::vector<Player>())
+Game::Game():
+	level_(1), is_running_(false),is_fullscreen_(false),
+	window_(SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT, SDL_WINDOW_SHOWN)),
+	screen_(SDL_GetWindowSurface(window_)),
+	renderer_(SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED)),
+	scene_(),camera_(),current_tile_(),current_player_(nullptr),game_state_(none),player_vector_(std::vector<Character*>())
 {
 }
 
@@ -14,14 +19,6 @@ Game::~Game()
 
 bool Game::init()
 {
-	// initialize SDL
-	SDL_Init(SDL_INIT_EVERYTHING);
-
-	// get window, screen, renderer pointers
-	window_ = SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-	screen_ = SDL_GetWindowSurface(window_);
-	renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
-
 	// load background level
 	scene_.change_level_map(level_,renderer_);
 
@@ -29,7 +26,7 @@ bool Game::init()
 	SpriteSheet::init_sprites(renderer_);
 
 	// load players
-	player_vector_.push_back(Player(0,0));
+	player_vector_.push_back(new Swordsman(0,0,true));
 
 	is_running_ = true;
 	std::cout << "Game initialized successfully." << std::endl;
@@ -113,23 +110,33 @@ void Game::handle_events()
 void Game::update()
 {
 	if (game_state_ == player_move)
+	{
 		move_player();
+	}
 }
 
 void Game::draw()
 {
 	scene_.draw_level_map(camera_, renderer_);
 
+	if (game_state_ == player_select)
+	{
+		scene_.draw_movement_grid(current_player_,renderer_);
+	}
 	for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
 	{
-		if ((*it).get_x() >= camera_.get_camera_x() && (*it).get_x() < camera_.get_camera_x_bound() && (*it).get_y() >= camera_.get_camera_y() && (*it).get_y() < camera_.get_camera_y_bound())
-			(*it).draw(camera_,renderer_);
+		(*it)->draw(camera_,renderer_);
+	}
+	for (auto it = enemy_vector_.begin(); it != enemy_vector_.end(); ++it)
+	{
+		(*it)->draw(camera_,renderer_);
 	}
 
 	if (game_state_ != player_move)
 	{
 		highlight_cur_tile();
 	}
+
 	SDL_RenderPresent(renderer_);
 }
 
@@ -208,11 +215,12 @@ void Game::handle_z_press()
 		case none:
 			for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
 			{
-				if (current_tile_.get_actual_x() == (*it).get_x() && current_tile_.get_actual_y() == (*it).get_y())
+				if (current_tile_.get_actual_x() == (*it)->get_x() && current_tile_.get_actual_y() == (*it)->get_y())
 				{
 					game_state_ = player_select;
-					current_player_p_ = &(*it);
-					current_player_p_->set_state(Character::selected);
+					current_player_ = (*it);
+					current_player_->set_state(Character::selected);
+					scene_.movement_grid_not_ready();
 					break;
 				}
 			}
@@ -222,15 +230,15 @@ void Game::handle_z_press()
 			break;
 		case player_done:
 			game_state_ = none;
-			current_player_p_->set_state(Character::idle);
+			current_player_->set_state(Character::idle);
 			break;
 	}
 }
 
 void Game::move_player()
 {
-	int x_diff = current_player_p_->get_x() - current_tile_.get_actual_x();
-	int y_diff = current_player_p_->get_y() - current_tile_.get_actual_y();
+	int x_diff = current_player_->get_x() - current_tile_.get_actual_x();
+	int y_diff = current_player_->get_y() - current_tile_.get_actual_y();
 
 	if (x_diff == 0 && y_diff == 0)
 	{
@@ -240,26 +248,26 @@ void Game::move_player()
 
 	if (x_diff < 0)
 	{
-		current_player_p_->set_state(Character::move_right);
+		current_player_->set_state(Character::move_right);
 	}
 	else if (x_diff > 0)
 	{
-		current_player_p_->set_state(Character::move_left);
+		current_player_->set_state(Character::move_left);
 	}
 	else if (y_diff < 0)
 	{
-		current_player_p_->set_state(Character::move_down);
+		current_player_->set_state(Character::move_down);
 	}
 	else if (y_diff > 0)
 	{
-		current_player_p_->set_state(Character::move_up);
+		current_player_->set_state(Character::move_up);
 	}
 	
-	current_player_p_->move();
+	current_player_->move();
 }
 
 void Game::after_player_move()
 {
 	game_state_ = player_done;
-	current_player_p_->set_state(Character::selected);
+	current_player_->set_state(Character::selected);
 }

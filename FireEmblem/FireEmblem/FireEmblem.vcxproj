@@ -28,7 +28,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v110</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -71,8 +71,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\ashang\Desktop\VS2015\lib\SDL2_ttf-2.0.12\include;C:\Users\ashang\Desktop\VS2015\lib\SDL2_image-2.0.1\include;C:\Users\ashang\Desktop\VS2015\lib\SDL2-2.0.4\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\ashang\Desktop\VS2015\lib\SDL2-2.0.4\lib\x86;C:\Users\ashang\Desktop\VS2015\lib\SDL2_ttf-2.0.12\lib\x86;C:\Users\ashang\Desktop\VS2015\lib\SDL2_image-2.0.1\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\shanga_proj\sdl\SDL2_ttf-2.0.14\include;C:\shanga_proj\sdl\SDL2_image-2.0.1\include;C:\shanga_proj\sdl\SDL2-2.0.4\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\shanga_proj\sdl\SDL2-2.0.4\lib\x86;C:\shanga_proj\sdl\SDL2_ttf-2.0.14\lib\x86;C:\shanga_proj\sdl\SDL2_image-2.0.1\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -154,13 +154,13 @@
     <ClInclude Include="current_tile.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="globals.h" />
-    <ClInclude Include="player.h" />
     <ClInclude Include="scene.h" />
+    <ClInclude Include="Characters\swordsman.h" />
     <ClInclude Include="texture_load_texture.h" />
     <ClInclude Include="sprite_sheet.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="character.h" />
+    <ClInclude Include="Characters\character.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
@@ -168,7 +168,6 @@
     <ClCompile Include="fire_emblem.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="globals.cpp" />
-    <ClCompile Include="player.cpp" />
     <ClCompile Include="scene.cpp" />
     <ClCompile Include="sprite_sheet.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -177,7 +176,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="character.cpp" />
+    <ClCompile Include="Characters\character.cpp" />
+    <ClCompile Include="Characters\swordsman.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Textures\sprites_anna.png" />

@@ -6,6 +6,9 @@
 
 int main()
 {
+	// initialize SDL
+	SDL_Init(SDL_INIT_EVERYTHING);
+
 	Game game;
 
 	if (game.init())
