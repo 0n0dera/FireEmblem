@@ -4,11 +4,11 @@
 #include "Characters/swordsman.h"
 
 Game::Game():
-	level_(1), is_running_(false),is_fullscreen_(false),
+	level_(1), game_state_(none), is_running_(false),is_fullscreen_(false),
 	window_(SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT, SDL_WINDOW_SHOWN)),
 	screen_(SDL_GetWindowSurface(window_)),
 	renderer_(SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED)),
-	scene_(),camera_(),current_tile_(),current_player_(nullptr),game_state_(none),player_vector_(std::vector<Character*>())
+	scene_(),camera_(),current_tile_(),player_vector_(std::vector<Character*>()),enemy_vector_(std::vector<Character*>()), current_player_(nullptr)
 {
 }
 
@@ -74,35 +74,38 @@ void Game::handle_events()
 				break;
 			
 			case SDL_KEYDOWN:
-				if (game_state_ == player_move)
-				{
-					break;
-				}
 				switch (event.key.keysym.sym)
 				{
-					case SDLK_ESCAPE:
-						quit();
-						break;
+				case SDLK_ESCAPE:
+					quit();
+					break;
 					//case SDLK_F4:
 					//	toggle_fullscreen();
 					//	break;
-					case SDLK_DOWN:
-						inc_cur_tile_y(globals.TILE_SIZE);
-						break;
-					case SDLK_UP:
-						inc_cur_tile_y(-globals.TILE_SIZE);
-						break;
-					case SDLK_RIGHT:
-						inc_cur_tile_x(globals.TILE_SIZE);
-						break;
-					case SDLK_LEFT:
-						inc_cur_tile_x(-globals.TILE_SIZE);
-						break;
-					case SDLK_z:
-						handle_z_press();
+				case SDLK_DOWN:
+					handle_down_press();
+					inc_cur_tile_y(globals.TILE_SIZE);
+					break;
+				case SDLK_UP:
+					handle_up_press();
+					inc_cur_tile_y(-globals.TILE_SIZE);
+					break;
+				case SDLK_RIGHT:
+					handle_right_press();
+					inc_cur_tile_x(globals.TILE_SIZE);
+					break;
+				case SDLK_LEFT:
+					handle_left_press();
+					inc_cur_tile_x(-globals.TILE_SIZE);
+					break;
+				case SDLK_z:
+					handle_z_press();
+					break;
+				case SDLK_x:
+					handle_x_press();
+					break;
 				}
 				break;
-
 		}
 	}
 }
@@ -121,7 +124,7 @@ void Game::draw()
 
 	if (game_state_ == player_select)
 	{
-		scene_.draw_movement_grid(current_player_,renderer_);
+		scene_.draw_movement_grid(current_player_,camera_,renderer_);
 	}
 	for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
 	{
@@ -168,70 +171,50 @@ void Game::highlight_cur_tile()
 
 void Game::inc_cur_tile_x(int amount)
 {
-	int new_tile_x = current_tile_.get_actual_x() + amount;
-	if (new_tile_x < scene_.get_level_map_width() && new_tile_x >= 0)
+	if (game_state_ == none || game_state_ == player_select)
 	{
-		if (new_tile_x >= camera_.get_camera_x_bound())
+		int new_tile_x = current_tile_.get_actual_x() + amount;
+		if (new_tile_x < scene_.get_level_map_width() && new_tile_x >= 0)
 		{
-			camera_.inc_camera_x();
+			if (new_tile_x >= camera_.get_camera_x_bound())
+			{
+				camera_.inc_camera_x();
+			}
+			else if (new_tile_x < camera_.get_camera_x())
+			{
+				camera_.dec_camera_x();
+			}
+			else
+			{
+				current_tile_.inc_screen_x(amount);
+			}
+			current_tile_.inc_actual_x(amount);
 		}
-		else if (new_tile_x < camera_.get_camera_x())
-		{
-			camera_.dec_camera_x();
-		}
-		else
-		{
-			current_tile_.inc_screen_x(amount);
-		}
-		current_tile_.inc_actual_x(amount);
-	}
+	}	
 }
 
 void Game::inc_cur_tile_y(int amount)
 {
-	int new_tile_y = current_tile_.get_actual_y() + amount;
-	if (new_tile_y < scene_.get_level_map_height() && new_tile_y >= 0)
+	if (game_state_ == none || game_state_ == player_select)
 	{
-		if (new_tile_y >= camera_.get_camera_y_bound())
-		{
-			camera_.inc_camera_y();
-		}
-		else if (new_tile_y < camera_.get_camera_y())
-		{
-			camera_.dec_camera_y();
-		}
-		else
-		{
-			current_tile_.inc_screen_y(amount);
-		}
-		current_tile_.inc_actual_y(amount);
-	}
-}
+		int new_tile_y = current_tile_.get_actual_y() + amount;
 
-void Game::handle_z_press()
-{
-	switch (game_state_)
-	{
-		case none:
-			for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
+		if (new_tile_y < scene_.get_level_map_height() && new_tile_y >= 0)
+		{
+			if (new_tile_y >= camera_.get_camera_y_bound())
 			{
-				if (current_tile_.get_actual_x() == (*it)->get_x() && current_tile_.get_actual_y() == (*it)->get_y())
-				{
-					game_state_ = player_select;
-					current_player_ = (*it);
-					current_player_->set_state(Character::selected);
-					scene_.movement_grid_not_ready();
-					break;
-				}
+				camera_.inc_camera_y();
 			}
-			break;
-		case player_select:
-			game_state_ = player_move;
-			break;
-		case player_done:
-			game_state_ = none;
-			current_player_->set_state(Character::idle);
-			break;
+			else if (new_tile_y < camera_.get_camera_y())
+			{
+				camera_.dec_camera_y();
+			}
+			else
+			{
+				current_tile_.inc_screen_y(amount);
+			}
+			current_tile_.inc_actual_y(amount);
+		}
 	}
 }
 
@@ -270,4 +253,63 @@ void Game::after_player_move()
 {
 	game_state_ = player_done;
 	current_player_->set_state(Character::selected);
+	scene_.movement_grid_not_ready();
+}
+
+void Game::handle_z_press()
+{
+	switch (game_state_)
+	{
+	case none:
+		for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
+		{
+			if (current_tile_.get_actual_x() == (*it)->get_x() && current_tile_.get_actual_y() == (*it)->get_y())
+			{
+				game_state_ = player_select;
+				current_player_ = (*it);
+				current_player_->set_state(Character::selected);
+				break;
+			}
+		}
+		break;
+	case player_select:
+		if (current_tile_.get_actual_x())
+		game_state_ = player_move;
+		break;
+	case player_done:
+		game_state_ = none;
+		current_player_->set_state(Character::idle);
+		break;
+	}
+}
+
+void Game::handle_x_press()
+{
+	switch (game_state_)
+	{
+		case player_select:
+			game_state_ = none;
+			current_player_->set_state(Character::idle);
+			break;
+	}
+}
+
+void Game::handle_down_press()
+{
+
+}
+
+void Game::handle_up_press()
+{
+
+}
+
+void Game::handle_right_press()
+{
+
+}
+
+void Game::handle_left_press()
+{
+
 }

@@ -16,6 +16,7 @@
 #include <string>
 #include "texture_load_texture.h"
 #include <vector>
+#include <algorithm>
 
 #undef main
 

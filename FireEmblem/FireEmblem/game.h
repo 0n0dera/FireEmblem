@@ -32,9 +32,15 @@ private:
 	void highlight_cur_tile();
 	void inc_cur_tile_x(int amount);
 	void inc_cur_tile_y(int amount);
-	void handle_z_press();
 	void move_player();
 	void after_player_move();
+	// button press handlers
+	void handle_z_press();
+	void handle_x_press();
+	void handle_down_press();
+	void handle_up_press();
+	void handle_right_press();
+	void handle_left_press();
 
 	int level_;
 	GameState game_state_;

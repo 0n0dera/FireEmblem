@@ -12,14 +12,15 @@ public:
 	void change_level_map(int level, SDL_Renderer* renderer);
 	int get_level_map_height() const;
 	int get_level_map_width() const;
-	void draw_movement_grid(const Character* const player, SDL_Renderer* renderer);
+	void draw_movement_grid(const Character* const player, const Camera& camera, SDL_Renderer* renderer);
 	void movement_grid_not_ready();
 	std::vector<std::pair<int,int>> attack_tiles_;
 	std::vector<std::pair<int,int>> move_tiles_;
 
 private:
 	static const std::string kCommonLevelMapPath;
-	void render_grid(SDL_Renderer* renderer);
+	void render_grid(const Camera& camera, SDL_Renderer* renderer);
+	void recur_move_grid(int x, int y, int steps_left,const int p_x, const int p_y, const int steps, const int atk, bool**& visited);
 	
 	bool movement_grid_ready_;
 	int level_map_height_;

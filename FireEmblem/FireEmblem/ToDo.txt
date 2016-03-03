@@ -4,8 +4,12 @@
 (DONE) Create background and implement scrolling
 (DONE) Create sprite atlas and find sprite dimensions, set class constants to represent these dimensions
 (DONE) Create Character class -> Player class
-- Create array to hold characters, only draw the characters that the camera sees 
-  (have vector of players/enemies and iterate through)
+(DONE) Create array to hold characters, only draw the characters that the camera sees 
+	   (have vector of players/enemies and iterate through)
+- re-implement flood fill for grid map
+	- think about boundaries: check if floodfill is going out of bounds
+	- check if impassible terrain (an enemy counts as impassable terrain)
+- Fix up game states input handling
 
 Anna
 Chrom
