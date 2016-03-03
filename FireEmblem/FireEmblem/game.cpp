@@ -28,6 +28,14 @@ bool Game::init()
 	// load players
 	player_vector_.push_back(new Swordsman(0,0,true));
 
+	// load enemies
+	enemy_vector_.push_back(new Swordsman(0,3,false));
+	enemy_vector_.push_back(new Swordsman(2,0,false));
+	enemy_vector_.push_back(new Swordsman(1,0,false));
+	enemy_vector_.push_back(new Swordsman(0,2,false));
+	enemy_vector_.push_back(new Swordsman(1,2,false));
+	enemy_vector_.push_back(new Swordsman(1,3,false));
+
 	is_running_ = true;
 	std::cout << "Game initialized successfully." << std::endl;
 
@@ -124,7 +132,7 @@ void Game::draw()
 
 	if (game_state_ == player_select)
 	{
-		scene_.draw_movement_grid(current_player_,camera_,renderer_);
+		scene_.draw_movement_grid(current_player_,camera_,enemy_vector_,renderer_);
 	}
 	for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
 	{
@@ -268,13 +276,26 @@ void Game::handle_z_press()
 				game_state_ = player_select;
 				current_player_ = (*it);
 				current_player_->set_state(Character::selected);
-				break;
+				return;
 			}
 		}
 		break;
 	case player_select:
-		if (current_tile_.get_actual_x())
-		game_state_ = player_move;
+		for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
+		{
+			if ((*it)->get_x() == current_tile_.get_actual_x() && (*it)->get_y() == current_tile_.get_actual_y())
+			{
+				return;
+			}		
+		}
+		for (auto it = scene_.move_tiles_.begin(); it != scene_.move_tiles_.end(); ++it)
+		{
+			if ((*it).first == current_tile_.get_actual_x() && (*it).second == current_tile_.get_actual_y())
+			{
+				game_state_ = player_move;
+				return;
+			}
+		}
 		break;
 	case player_done:
 		game_state_ = none;

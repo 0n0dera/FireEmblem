@@ -6,7 +6,7 @@ class Character
 
 public:
 	enum CharacterState { idle = 0, selected = 4, move_up = 5, move_right = 3, move_down = 4, move_left = 2, attacking = 1 };
-	Character(int x, int y, int num_steps, int attack_range, bool is_player, int y_start);
+	Character(int x, int y, int num_steps, int min_attack_range, int max_attack_range, bool is_player, int y_start);
 	virtual ~Character(void) = 0;
 	// getters and setters
 	int get_x() const;
@@ -25,7 +25,8 @@ public:
 	void set_state(CharacterState state);
 	int get_anim_delay() const;
 	int get_num_steps() const;
-	int get_attack_range() const;
+	int get_max_attack_range() const;
+	int get_min_attack_range() const;
 	int get_sprite_y_start() const;
 	bool is_turn_done() const;
 	void set_turn_done(bool val);
@@ -41,7 +42,8 @@ private:
 	int frame_;
 	int anim_delay_;
 	int num_steps_;
-	int attack_range_;
+	int max_attack_range_;
+	int min_attack_range_;
 	CharacterState state_;
 	bool is_player_;
 	int sprite_y_start_;
@@ -98,9 +100,14 @@ inline int Character::get_num_steps() const
 	return num_steps_;
 }
 
-inline int Character::get_attack_range() const
+inline int Character::get_max_attack_range() const
 {
-	return attack_range_;
+	return max_attack_range_;
+}
+
+inline int Character::get_min_attack_range() const
+{
+	return min_attack_range_;
 }
 
 inline int Character::get_sprite_y_start() const

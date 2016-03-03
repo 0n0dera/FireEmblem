@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "character.h"
-#include "../sprite_sheet.h"
+#include "sprite_sheet.h"
 
-Character::Character(int x, int y, int num_steps, int attack_range, bool is_player, int y_start): x_(x), y_(y), state_(idle), frame_(0), anim_delay_(100), last_anim_frame_time_(0), num_steps_(num_steps), attack_range_(attack_range), is_player_(is_player), sprite_y_start_(y_start), turn_done_(false)
+Character::Character(int x, int y, int num_steps, int min_attack_range,int max_attack_range, bool is_player, int y_start): x_(x), y_(y), state_(idle), frame_(0), anim_delay_(100), last_anim_frame_time_(0), num_steps_(num_steps), max_attack_range_(max_attack_range), min_attack_range_(min_attack_range),is_player_(is_player), sprite_y_start_(y_start), turn_done_(false)
 {
 }
 
