@@ -5,7 +5,15 @@ class Character
 {
 
 public:
-	enum CharacterState { idle = 0, selected = 4, move_up = 5, move_right = 3, move_down = 4, move_left = 2, attacking = 1 };
+	enum CharacterState { 
+		idle = 0, 
+		selected = 4, 
+		move_up = 5, 
+		move_right = 3, 
+		move_down = 4,
+		move_left = 2,
+		attacking = 1
+	};
 	Character(int x, int y, int num_steps, int min_attack_range, int max_attack_range, bool is_player, int y_start);
 	virtual ~Character(void) = 0;
 	// getters and setters
@@ -28,8 +36,9 @@ public:
 	int get_max_attack_range() const;
 	int get_min_attack_range() const;
 	int get_sprite_y_start() const;
-	bool is_turn_done() const;
-	void set_turn_done(bool val);
+	bool is_player() const;
+	bool is_grey() const;
+	void set_grey(bool val);
 
 	int last_anim_frame_time_;
 
@@ -47,7 +56,7 @@ private:
 	CharacterState state_;
 	bool is_player_;
 	int sprite_y_start_;
-	bool turn_done_;
+	bool grey_;
 };
 
 
@@ -115,12 +124,16 @@ inline int Character::get_sprite_y_start() const
 	return sprite_y_start_;
 }
 
-inline bool Character::is_turn_done() const
+inline bool Character::is_grey() const
 {
-	return turn_done_;
+	return grey_;
 }
 
-inline void Character::set_turn_done(bool val)
+inline void Character::set_grey(bool val)
 {
-	turn_done_ = val;
+	grey_ = val;
+}
+inline bool Character::is_player() const
+{
+	return is_player_;
 }

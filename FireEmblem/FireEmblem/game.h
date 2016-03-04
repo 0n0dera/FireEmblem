@@ -19,8 +19,8 @@ private:
 		player_select,	// player selected a unit
 		player_move,	// unit is moving
 		player_attack,	// unit has stopped moving and can attack
-		player_done,	// unit can't do anything else
 		fight,			// fight scene
+		player_done,	// unit has attacked, only menu
 		enemy_move		// enemy is moving
 	};
 	void change_level();
@@ -29,7 +29,6 @@ private:
 	void draw();
 	void quit();
 	void toggle_fullscreen();
-	void highlight_cur_tile();
 	void inc_cur_tile_x(int amount);
 	void inc_cur_tile_y(int amount);
 	void move_player();
@@ -43,6 +42,9 @@ private:
 	void handle_left_press();
 	void reset_camera();
 	void update_enemy_positions();
+	void update_player_positions();
+	void player_unit_is_done();
+	int get_unit_array_pos(const int x, const int y);
 
 	int level_;
 	GameState game_state_;
@@ -56,6 +58,7 @@ private:
 	CurrentTile current_tile_;
 	std::vector<Character*> player_vector_;
 	std::vector<Character*> enemy_vector_;
+	std::vector<Character*> character_map_;
 	Character* current_player_;
 	int saved_player_x_;
 	int saved_player_y_;

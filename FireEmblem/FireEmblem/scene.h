@@ -15,6 +15,7 @@ public:
 	int get_level_map_height_tiles() const;
 	int get_level_map_width_tiles() const;
 	void draw_movement_grid(const Character* const player, const Camera& camera, const std::vector<Character*>& enemies, SDL_Renderer* renderer);
+	void draw_selected_tile(const int x, const int y, const int size, SDL_Renderer* renderer);
 	void movement_grid_not_ready();
 	std::vector<std::pair<int,int>> attack_tiles_;
 	std::vector<std::pair<int,int>> move_tiles_;

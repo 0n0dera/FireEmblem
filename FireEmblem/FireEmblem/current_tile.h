@@ -10,8 +10,11 @@ public:
 	void inc_actual_y(int amount);
 	void set_actual_x(int x);
 	void set_actual_y(int y);
+	void inc_frame();
+	int get_frame() const;
 
 private:
+	int frame_;
 	int actual_x_;
 	int actual_y_;
 };
@@ -43,4 +46,9 @@ inline void CurrentTile::set_actual_x(int x)
 inline void CurrentTile::set_actual_y(int y)
 {
 	actual_y_ = y;
+}
+
+inline int CurrentTile::get_frame() const
+{
+	return frame_;
 }

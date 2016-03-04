@@ -12,6 +12,11 @@ Scene::Scene(SDL_Renderer* renderer):
 {
 	texture::load_texture_from_file("Textures/blue_tile.png", blue_tile_, renderer);
 	texture::load_texture_from_file("Textures/red_tile.png", red_tile_, renderer);
+	SDL_SetTextureBlendMode(blue_tile_,SDL_BLENDMODE_BLEND);
+	SDL_SetTextureBlendMode(red_tile_,SDL_BLENDMODE_BLEND);
+	SDL_SetTextureAlphaMod(blue_tile_,155);
+	SDL_SetTextureAlphaMod(red_tile_,155);
+	change_level_map(1, renderer);
 }
 
 
@@ -58,6 +63,13 @@ void Scene::change_level_map(int level, SDL_Renderer* renderer)
 	}
 
 	infile.close();
+}
+
+void Scene::draw_selected_tile(const int x, const int y, const int size, SDL_Renderer* renderer)
+{
+	SDL_SetRenderDrawColor(renderer,255,0,0,255);
+	SDL_Rect cur_tile_rect = {x,y,globals.TILE_SIZE+size,globals.TILE_SIZE+size};
+	SDL_RenderDrawRect(renderer, &cur_tile_rect);
 }
 
 void Scene::draw_movement_grid(const Character* const player, const Camera& camera, const std::vector<Character*>& enemies, SDL_Renderer* renderer)
