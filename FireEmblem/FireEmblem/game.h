@@ -41,6 +41,8 @@ private:
 	void handle_up_press();
 	void handle_right_press();
 	void handle_left_press();
+	void reset_camera();
+	void update_enemy_positions();
 
 	int level_;
 	GameState game_state_;
@@ -55,4 +57,8 @@ private:
 	std::vector<Character*> player_vector_;
 	std::vector<Character*> enemy_vector_;
 	Character* current_player_;
+	int saved_player_x_;
+	int saved_player_y_;
+	int saved_camera_x_;
+	int saved_camera_y_;
 };

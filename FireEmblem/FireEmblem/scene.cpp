@@ -1,20 +1,25 @@
 #include "stdafx.h"
+#include "sprite_sheet.h"
 #include "scene.h"
 #include <fstream>
 #include <sstream>
 
 const std::string Scene::kCommonLevelMapPath = "Levels/level_map_";
 
-Scene::Scene(void): 
+Scene::Scene(SDL_Renderer* renderer): 
 	attack_tiles_(std::vector<std::pair<int,int>>()),move_tiles_(std::vector<std::pair<int,int>>()),
-	movement_grid_ready_(false),level_map_height_(0),level_map_width_(0),level_map_height_tiles_(0),level_map_width_tiles_(0),level_map_(nullptr),terrain_map_(std::vector<bool>())
+	movement_grid_ready_(false),level_map_height_(0),level_map_width_(0),level_map_height_tiles_(0),level_map_width_tiles_(0),level_map_(nullptr),impassable_terrain_(std::vector<bool>()),blue_tile_(nullptr), red_tile_(nullptr)
 {
+	texture::load_texture_from_file("Textures/blue_tile.png", blue_tile_, renderer);
+	texture::load_texture_from_file("Textures/red_tile.png", red_tile_, renderer);
 }
 
 
 Scene::~Scene(void)
 {
 	SDL_DestroyTexture(level_map_);
+	SDL_DestroyTexture(blue_tile_);
+	SDL_DestroyTexture(red_tile_);
 }
 
 void Scene::draw_level_map(const Camera& camera, SDL_Renderer* renderer) const
@@ -31,9 +36,9 @@ void Scene::change_level_map(int level, SDL_Renderer* renderer)
 	level_map_height_tiles_ = level_map_height_ / globals.TILE_SIZE;
 	level_map_width_tiles_  = level_map_width_ / globals.TILE_SIZE;
 
-	if (terrain_map_.size() > 0)
+	if (impassable_terrain_.size() > 0)
 	{
-		terrain_map_.clear();
+		impassable_terrain_.clear();
 	}
 
 	// read level terrain txt file
@@ -46,8 +51,8 @@ void Scene::change_level_map(int level, SDL_Renderer* renderer)
 
 		for (int j=0;j<level_map_width_tiles_;j++)
 		{
-			terrain_map_.push_back((line.at(j) == '1' ? false : true));
-			std::cout << terrain_map_.at(i*level_map_width_tiles_+j);
+			impassable_terrain_.push_back((line.at(j) == '1' ? true : false));
+			std::cout << impassable_terrain_.at(i*level_map_width_tiles_+j);
 		}
 		std::cout << std::endl;
 	}
@@ -86,15 +91,15 @@ void Scene::draw_movement_grid(const Character* const player, const Camera& came
 		
 		for (int i = 0; i < grid_size; i++)
 		{
-			for (int j=0;j < grid_size;j++)
+			for (int j = 0; j < grid_size;j++)
 			{
 				if (visited[i][j] == 1)
 				{
-					move_tiles_.push_back(std::pair<int,int>((i+offset_x)*globals.TILE_SIZE,(j+offset_y)*globals.TILE_SIZE));
+					move_tiles_.push_back(std::pair<int,int>((j+offset_x)*globals.TILE_SIZE,(i+offset_y)*globals.TILE_SIZE));
 				}
 				else if (visited[i][j] == 2)
 				{
-					attack_tiles_.push_back(std::pair<int,int>((i+offset_x)*globals.TILE_SIZE,(j+offset_y)*globals.TILE_SIZE));
+					attack_tiles_.push_back(std::pair<int,int>((j+offset_x)*globals.TILE_SIZE,(i+offset_y)*globals.TILE_SIZE));
 				}
 			}
 			delete[] visited[i];
@@ -111,7 +116,7 @@ void Scene::recur_move_grid(int tile_x, int tile_y, int steps_left, const int of
 {
 	int arr_x = tile_x - offset_x;
 	int arr_y = tile_y - offset_y;
-	visited[arr_x][arr_y] = 1;
+	visited[arr_y][arr_x] = 1;
 		
 	int cur_x;
 	int cur_y;
@@ -124,29 +129,35 @@ void Scene::recur_move_grid(int tile_x, int tile_y, int steps_left, const int of
 			cur_y = tile_y + j;
 			if (cur_x >= 0 && cur_x < level_map_width_tiles_ && cur_y >=0 && cur_y < level_map_height_tiles_)
 			{
-				if ((std::abs(i) + std::abs(j)) >= min_atk && visited[arr_x+i][arr_y+j] != 1)
+				if ((std::abs(i) + std::abs(j)) >= min_atk && visited[arr_y+j][arr_x+i] != 1)
 				{
-					visited[arr_x + i][arr_y + j] = 2;
+					visited[arr_y + j][arr_x + i] = 2;
 				}
 			}
 		}
 	}
-
+	/*for (int i = 0; i < 11; i++)
+	{
+		for (int j = 0; j < 11; j++)
+			std::cout << visited[i][j];
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;*/
 	if (steps_left == 0) return;
 
-	if (tile_y - 1 >= 0  && visited[tile_x][tile_y-1] != 1)
+	if (tile_y - 1 >= 0 && !is_tile_blocked(tile_x, tile_y-1))
 	{
 		recur_move_grid(tile_x, tile_y-1, steps_left-1, offset_x, offset_y, min_atk,max_atk, enemies, visited);
 	}
-	if (tile_x + 1 < level_map_width_tiles_  && visited[tile_x+1][tile_y] != 1)
+	if (tile_x + 1 < level_map_width_tiles_ && !is_tile_blocked(tile_x + 1, tile_y))
 	{
 		recur_move_grid(tile_x+1, tile_y, steps_left-1, offset_x, offset_y, min_atk,max_atk,enemies, visited);
 	}
-	if (tile_y + 1 < level_map_height_tiles_  && visited[tile_x][tile_y+1] != 1)
+	if (tile_y + 1 < level_map_height_tiles_ && !is_tile_blocked(tile_x, tile_y+1))
 	{
 		recur_move_grid(tile_x, tile_y+1, steps_left-1, offset_x, offset_y, min_atk,max_atk,enemies, visited);
 	}
-	if (tile_x - 1 >= 0  && visited[tile_x-1][tile_y] != 1)
+	if (tile_x - 1 >= 0 && !is_tile_blocked(tile_x - 1,tile_y))
 	{
 		recur_move_grid(tile_x-1, tile_y, steps_left-1, offset_x, offset_y,min_atk,max_atk, enemies, visited);
 	}
@@ -154,22 +165,20 @@ void Scene::recur_move_grid(int tile_x, int tile_y, int steps_left, const int of
 
 void Scene::render_grid(const Camera& camera, SDL_Renderer* renderer)
 {
-	SDL_SetRenderDrawColor(renderer,255,0,0,255);
 	SDL_Rect r;
-	r.w =  globals.TILE_SIZE;
-	r.h =  globals.TILE_SIZE;
+	r.w =  globals.COLOR_TILE_SIZE;
+	r.h =  globals.COLOR_TILE_SIZE;
 	for (auto it = attack_tiles_.begin(); it != attack_tiles_.end(); ++it)
 	{
-		r.x = (*it).first - camera.get_camera_x();
-		r.y = (*it).second - camera.get_camera_y();
-		SDL_RenderFillRect(renderer,&r);
+		r.x = (*it).first - camera.get_camera_x() + 1;
+		r.y = (*it).second - camera.get_camera_y() + 1;
+		SDL_RenderCopy(renderer, red_tile_, NULL, &r);
 	}
-	SDL_SetRenderDrawColor(renderer,0,0,255,255);
 	for (auto it = move_tiles_.begin(); it != move_tiles_.end(); ++it)
 	{
-		r.x = (*it).first - camera.get_camera_x();
-		r.y = (*it).second - camera.get_camera_y();
-		SDL_RenderFillRect(renderer,&r);
+		r.x = (*it).first - camera.get_camera_x() + 1;
+		r.y = (*it).second - camera.get_camera_y() + 1;
+		SDL_RenderCopy(renderer, blue_tile_, NULL, &r);
 	}
 }
 
@@ -180,9 +189,7 @@ void Scene::movement_grid_not_ready()
 	move_tiles_.clear();
 }
 
-bool Scene::is_tile_blocked(const int tile_x, const int tile_y, const std::vector<Character*>& enemies) const
+bool Scene::is_tile_blocked(const int tile_x, const int tile_y)
 {
-	if (!terrain_map_.at(tile_y*level_map_width_tiles_+tile_x))
-		return true;
-	return false;
+	return impassable_terrain_[tile_y*level_map_width_tiles_ + tile_x];
 }

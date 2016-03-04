@@ -8,7 +8,8 @@ Game::Game():
 	window_(SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT, SDL_WINDOW_SHOWN)),
 	screen_(SDL_GetWindowSurface(window_)),
 	renderer_(SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED)),
-	scene_(),camera_(),current_tile_(),player_vector_(std::vector<Character*>()),enemy_vector_(std::vector<Character*>()), current_player_(nullptr)
+	scene_(renderer_),camera_(),current_tile_(),player_vector_(std::vector<Character*>()),enemy_vector_(std::vector<Character*>()), current_player_(nullptr),
+	saved_player_x_(0),saved_player_y_(0), saved_camera_x_(0), saved_camera_y_(0)
 {
 }
 
@@ -35,6 +36,8 @@ bool Game::init()
 	enemy_vector_.push_back(new Swordsman(0,2,false));
 	enemy_vector_.push_back(new Swordsman(1,2,false));
 	enemy_vector_.push_back(new Swordsman(1,3,false));
+
+	update_enemy_positions();
 
 	is_running_ = true;
 	std::cout << "Game initialized successfully." << std::endl;
@@ -173,7 +176,7 @@ void Game::change_level()
 void Game::highlight_cur_tile()
 {
 	SDL_SetRenderDrawColor(renderer_,255,0,0,255);
-	SDL_Rect cur_tile_rect = {current_tile_.get_screen_x(),current_tile_.get_screen_y(),globals.TILE_SIZE,globals.TILE_SIZE};
+	SDL_Rect cur_tile_rect = {current_tile_.get_actual_x()-camera_.get_camera_x(),current_tile_.get_actual_y()-camera_.get_camera_y(),globals.TILE_SIZE,globals.TILE_SIZE};
 	SDL_RenderDrawRect(renderer_, &cur_tile_rect);
 }
 
@@ -191,10 +194,6 @@ void Game::inc_cur_tile_x(int amount)
 			else if (new_tile_x < camera_.get_camera_x())
 			{
 				camera_.dec_camera_x();
-			}
-			else
-			{
-				current_tile_.inc_screen_x(amount);
 			}
 			current_tile_.inc_actual_x(amount);
 		}
@@ -216,10 +215,6 @@ void Game::inc_cur_tile_y(int amount)
 			else if (new_tile_y < camera_.get_camera_y())
 			{
 				camera_.dec_camera_y();
-			}
-			else
-			{
-				current_tile_.inc_screen_y(amount);
 			}
 			current_tile_.inc_actual_y(amount);
 		}
@@ -261,7 +256,6 @@ void Game::after_player_move()
 {
 	game_state_ = player_done;
 	current_player_->set_state(Character::selected);
-	scene_.movement_grid_not_ready();
 }
 
 void Game::handle_z_press()
@@ -276,6 +270,10 @@ void Game::handle_z_press()
 				game_state_ = player_select;
 				current_player_ = (*it);
 				current_player_->set_state(Character::selected);
+				saved_player_x_ = current_player_->get_x();
+				saved_player_y_ = current_player_->get_y();
+				saved_camera_x_ = camera_.get_camera_x();
+				saved_camera_y_ = camera_.get_camera_y();
 				return;
 			}
 		}
@@ -283,7 +281,7 @@ void Game::handle_z_press()
 	case player_select:
 		for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
 		{
-			if ((*it)->get_x() == current_tile_.get_actual_x() && (*it)->get_y() == current_tile_.get_actual_y())
+			if ((*it)!=current_player_ && (*it)->get_x() == current_tile_.get_actual_x() && (*it)->get_y() == current_tile_.get_actual_y())
 			{
 				return;
 			}		
@@ -300,6 +298,7 @@ void Game::handle_z_press()
 	case player_done:
 		game_state_ = none;
 		current_player_->set_state(Character::idle);
+		scene_.movement_grid_not_ready();
 		break;
 	}
 }
@@ -310,8 +309,18 @@ void Game::handle_x_press()
 	{
 		case player_select:
 			game_state_ = none;
+			scene_.movement_grid_not_ready();
 			current_player_->set_state(Character::idle);
+			reset_camera();
 			break;
+		case player_done:
+			game_state_ = player_select;
+			current_player_->set_state(Character::selected);
+			current_player_->set_x(saved_player_x_);
+			current_player_->set_y(saved_player_y_);
+			reset_camera();
+			break;
+
 	}
 }
 
@@ -333,4 +342,29 @@ void Game::handle_right_press()
 void Game::handle_left_press()
 {
 
+}
+
+void Game::reset_camera()
+{
+	current_tile_.set_actual_x(current_player_->get_x());
+	current_tile_.set_actual_y(current_player_->get_y());
+	camera_.set_camera_x(saved_camera_x_);
+	camera_.set_camera_y(saved_camera_y_);
+}
+
+void Game::update_enemy_positions()
+{
+	for (auto it = enemy_vector_.begin(); it != enemy_vector_.end(); ++it)
+	{
+		scene_.impassable_terrain_[(*it)->get_y() / globals.TILE_SIZE*scene_.get_level_map_width_tiles() + (*it)->get_x()/globals.TILE_SIZE] = 1;
+	}
+	std::cout << std::endl;
+	for (int i = 0; i < scene_.get_level_map_height_tiles(); i++)
+	{
+		for (int j = 0; j < scene_.get_level_map_width_tiles(); j++)
+		{
+			std::cout << scene_.impassable_terrain_[i*scene_.get_level_map_width_tiles() + j];
+		}
+		std::cout << std::endl;
+	}
 }

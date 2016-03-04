@@ -1,6 +1,7 @@
 #pragma once
 typedef struct
 {
+	static const int COLOR_TILE_SIZE = 38;
 	static const int TILE_SIZE = 40;
 	static const int SPRITE_SIZE = 43;
     static const int SCREEN_WIDTH = 400;
