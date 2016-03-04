@@ -9,7 +9,10 @@
 (DONE) re-implement flood fill for grid map
 		- think about boundaries: check if floodfill is going out of bounds
 		- check if impassible terrain (an enemy counts as impassable terrain)
-- Fix up game states input handling (up down left right handlers)
+(DONE) Fix up game states input handling (up down left right handlers)
+
+- draw player grey states, use player counter to track nongrey players. If player counter == 0, enemy turn
+- work on attacking!
 
 Anna
 Chrom
