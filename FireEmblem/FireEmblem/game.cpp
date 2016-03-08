@@ -1,7 +1,8 @@
 #include "stdafx.h"
-#include "game.h"
 #include "sprite_sheet.h"
 #include "Characters/swordsman.h"
+#include "Characters/character.h"
+#include "game.h"
 
 Game::Game():
 	level_(1), game_state_(none), is_running_(false),is_fullscreen_(false),
@@ -9,7 +10,7 @@ Game::Game():
 	screen_(SDL_GetWindowSurface(window_)),
 	renderer_(SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED)),
 	scene_(renderer_),camera_(),current_tile_(),player_vector_(std::vector<Character*>()),enemy_vector_(std::vector<Character*>()), character_map_(std::vector<Character*>(scene_.get_level_map_height_tiles()*scene_.get_level_map_width_tiles())),current_player_(nullptr),
-	saved_player_x_(0),saved_player_y_(0), saved_camera_x_(0), saved_camera_y_(0)
+	saved_player_x_(0),saved_player_y_(0), saved_camera_x_(0), saved_camera_y_(0),player_menu_()
 {
 }
 
@@ -17,6 +18,8 @@ Game::Game():
 Game::~Game()
 {
 }
+
+/************************* PUBLIC METHODS **************************/
 
 bool Game::init()
 {
@@ -73,6 +76,8 @@ void Game::clean()
 	SDL_DestroyRenderer(renderer_);
 	SDL_Quit();
 }
+
+/************************* CORE METHODS **************************/
 
 void Game::handle_events()
 {
@@ -156,6 +161,11 @@ void Game::draw()
 		scene_.draw_selected_tile(current_tile_.get_actual_x()-camera_.get_camera_x()-current_tile_.get_frame(),current_tile_.get_actual_y()-camera_.get_camera_y()-current_tile_.get_frame(),2*current_tile_.get_frame(),renderer_);
 	}
 
+	if (game_state_ == player_menu || game_state_ == player_done)
+	{
+		player_menu_.draw(current_player_,scene_,renderer_);
+	}
+
 	SDL_RenderPresent(renderer_);
 }
 
@@ -177,6 +187,9 @@ void Game::toggle_fullscreen()
 void Game::change_level()
 {
 }
+
+
+/************************* MOVEMENT RELATED METHODS **************************/
 
 void Game::inc_cur_tile_x(int amount)
 {
@@ -252,8 +265,21 @@ void Game::move_player()
 
 void Game::after_player_move()
 {
-	game_state_ = player_done;
+	game_state_ = player_menu;
 }
+
+void Game::reset_camera()
+{
+	current_player_->set_x(saved_player_x_);
+	current_player_->set_y(saved_player_y_);
+	current_tile_.set_actual_x(saved_player_x_);
+	current_tile_.set_actual_y(saved_player_y_);
+	camera_.set_camera_x(saved_camera_x_);
+	camera_.set_camera_y(saved_camera_y_);
+}
+
+
+/************************* BUTTON PRESS HANDLER METHODS **************************/
 
 void Game::handle_z_press()
 {
@@ -311,7 +337,7 @@ void Game::handle_x_press()
 			current_player_->set_state(Character::idle);
 			reset_camera();
 			break;
-		case player_done:
+		case player_menu:
 			game_state_ = player_select;
 			current_player_->set_state(Character::selected);
 			reset_camera();
@@ -364,15 +390,11 @@ void Game::handle_left_press()
 	}
 }
 
-void Game::reset_camera()
-{
-	current_player_->set_x(saved_player_x_);
-	current_player_->set_y(saved_player_y_);
-	current_tile_.set_actual_x(saved_player_x_);
-	current_tile_.set_actual_y(saved_player_y_);
-	camera_.set_camera_x(saved_camera_x_);
-	camera_.set_camera_y(saved_camera_y_);
-}
+
+/************************* MENU/ATTACK RELATED METHODS **************************/
+
+
+/************************* UPDATING POSITION/END OF TURN METHODS **************************/
 
 void Game::update_enemy_positions()
 {
@@ -398,6 +420,9 @@ void Game::player_unit_is_done()
 	character_map_[get_unit_array_pos(saved_player_x_,saved_player_y_)] = nullptr;
 	character_map_[get_unit_array_pos(current_player_->get_x(),current_player_->get_y())] = current_player_;
 }
+
+
+/************************* HELPER METHODS **************************/
 
 int Game::get_unit_array_pos(const int x, const int y)
 {

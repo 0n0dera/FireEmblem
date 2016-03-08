@@ -1,8 +1,9 @@
 #pragma once
+
 #include "scene.h"
 #include "camera.h"
 #include "current_tile.h"
-#include "Characters/character.h"
+#include "player_menu.h"
 
 class Game
 {
@@ -18,21 +19,28 @@ private:
 		none,			// default
 		player_select,	// player selected a unit
 		player_move,	// unit is moving
+		player_menu,	// unit has attacked, only menu
 		player_attack,	// unit has stopped moving and can attack
 		fight,			// fight scene
-		player_done,	// unit has attacked, only menu
+		player_done,
 		enemy_move		// enemy is moving
 	};
-	void change_level();
+
+	// core methods
 	void handle_events();
 	void update();
 	void draw();
 	void quit();
 	void toggle_fullscreen();
+	void change_level();
+
+	// movement related methods
 	void inc_cur_tile_x(int amount);
 	void inc_cur_tile_y(int amount);
 	void move_player();
 	void after_player_move();
+	void reset_camera();
+
 	// button press handlers
 	void handle_z_press();
 	void handle_x_press();
@@ -40,10 +48,15 @@ private:
 	void handle_up_press();
 	void handle_right_press();
 	void handle_left_press();
-	void reset_camera();
+
+	// menu/attack related methods
+
+	// updating position/end of turn methods
 	void update_enemy_positions();
 	void update_player_positions();
 	void player_unit_is_done();
+
+	// helper methods
 	int get_unit_array_pos(const int x, const int y);
 
 	int level_;
@@ -64,4 +77,5 @@ private:
 	int saved_player_y_;
 	int saved_camera_x_;
 	int saved_camera_y_;
+	PlayerMenu player_menu_;
 };

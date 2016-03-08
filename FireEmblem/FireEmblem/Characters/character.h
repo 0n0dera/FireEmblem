@@ -39,6 +39,8 @@ public:
 	bool is_player() const;
 	bool is_grey() const;
 	void set_grey(bool val);
+	bool can_act() const;
+	void set_act(bool val);
 
 	int last_anim_frame_time_;
 
@@ -57,6 +59,7 @@ private:
 	bool is_player_;
 	int sprite_y_start_;
 	bool grey_;
+	bool can_act_;
 };
 
 
@@ -74,7 +77,7 @@ inline int Character::get_tex_x() const
 }
 inline int Character::get_tex_y() const
 {
-	return y_ + Globals::TILE_SIZE;
+	return y_ + globals.TILE_SIZE;
 }
 inline void Character::set_x(int new_x)
 {
@@ -136,4 +139,12 @@ inline void Character::set_grey(bool val)
 inline bool Character::is_player() const
 {
 	return is_player_;
+}
+inline bool Character::can_act() const
+{
+	return can_act_;
+}
+inline void Character::set_act(bool val)
+{
+	can_act_ = val;
 }
