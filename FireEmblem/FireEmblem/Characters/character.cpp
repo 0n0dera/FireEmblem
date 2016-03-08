@@ -28,16 +28,16 @@ void Character::move()
 	switch (state_)
 	{
 		case Character::move_up:
-			set_y(get_y() - globals.SPRITE_MOVE_SPEED);
+			set_y(get_y() - Globals::SPRITE_MOVE_SPEED);
 			break;
 		case Character::move_right:
-			set_x(get_x() + globals.SPRITE_MOVE_SPEED);
+			set_x(get_x() + Globals::SPRITE_MOVE_SPEED);
 			break;
 		case Character::move_down:
-			set_y(get_y() + globals.SPRITE_MOVE_SPEED);
+			set_y(get_y() + Globals::SPRITE_MOVE_SPEED);
 			break;
 		case Character::move_left:
-			set_x(get_x() - globals.SPRITE_MOVE_SPEED);
+			set_x(get_x() - Globals::SPRITE_MOVE_SPEED);
 			break;
 	}
 }
@@ -54,7 +54,7 @@ void Character::draw(const Camera& camera, SDL_Renderer* renderer)
 	{
 		sprite_start_x = SpriteSheet::kEnemySpriteStartX;
 	}
-	SDL_Rect dest_rect = { get_tex_x() - camera.get_camera_x(), get_tex_y() - globals.SPRITE_SIZE - camera.get_camera_y(), globals.SPRITE_SIZE, globals.SPRITE_SIZE };
-	SDL_Rect src_rect = { sprite_start_x + get_frame()*globals.SPRITE_SIZE, get_sprite_y_start() + get_state()*globals.SPRITE_SIZE, globals.SPRITE_SIZE, globals.SPRITE_SIZE };
+	SDL_Rect dest_rect = { get_tex_x() - camera.get_camera_x(), get_tex_y() - Globals::SPRITE_SIZE - camera.get_camera_y(), Globals::SPRITE_SIZE, Globals::SPRITE_SIZE };
+	SDL_Rect src_rect = { sprite_start_x + get_frame()*Globals::SPRITE_SIZE, get_sprite_y_start() + get_state()*Globals::SPRITE_SIZE, Globals::SPRITE_SIZE, Globals::SPRITE_SIZE };
 	SDL_RenderCopy(renderer, SpriteSheet::player_sprites_, &src_rect, &dest_rect);
 }

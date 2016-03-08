@@ -14,7 +14,7 @@
 #include <SDL_ttf.h>
 #include <iostream>
 #include <string>
-#include "texture_load_texture.h"
+#include "load_texture.h"
 #include <vector>
 #include <algorithm>
 

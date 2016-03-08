@@ -4,7 +4,7 @@ class SpriteSheet
 {
 
 public:
-	const static int kPlayerSpriteStartX = globals.SPRITE_SIZE * 4;
+	const static int kPlayerSpriteStartX = Globals::SPRITE_SIZE * 4;
 	const static int kEnemySpriteStartX = 0;
 	const static int kAnimationFrames = 4;
 

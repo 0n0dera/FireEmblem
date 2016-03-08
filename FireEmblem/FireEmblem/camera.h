@@ -32,22 +32,22 @@ inline int Camera::get_camera_y() const
 
 inline void Camera::inc_camera_x()
 {
-	camera_x_ += globals.TILE_SIZE;
+	camera_x_ += Globals::TILE_SIZE;
 }
 
 inline void Camera::inc_camera_y()
 {
-	camera_y_ += globals.TILE_SIZE;
+	camera_y_ += Globals::TILE_SIZE;
 }
 
 inline void Camera::dec_camera_x()
 {
-	camera_x_ -= globals.TILE_SIZE;
+	camera_x_ -= Globals::TILE_SIZE;
 }
 
 inline void Camera::dec_camera_y()
 {
-	camera_y_ -= globals.TILE_SIZE;
+	camera_y_ -= Globals::TILE_SIZE;
 }
 
 inline void Camera::set_camera_x(int amount)
@@ -62,10 +62,10 @@ inline void Camera::set_camera_y(int amount)
 
 inline int Camera::get_camera_x_bound() const
 {
-	return camera_x_ + globals.SCREEN_WIDTH;
+	return camera_x_ + Globals::SCREEN_WIDTH;
 }
 
 inline int Camera::get_camera_y_bound() const
 {
-	return camera_y_ + globals.SCREEN_HEIGHT;
+	return camera_y_ + Globals::SCREEN_HEIGHT;
 }

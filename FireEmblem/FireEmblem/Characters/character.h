@@ -74,7 +74,7 @@ inline int Character::get_tex_x() const
 }
 inline int Character::get_tex_y() const
 {
-	return y_ + globals.TILE_SIZE;
+	return y_ + Globals::TILE_SIZE;
 }
 inline void Character::set_x(int new_x)
 {

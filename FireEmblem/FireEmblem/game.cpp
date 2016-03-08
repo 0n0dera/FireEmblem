@@ -253,7 +253,6 @@ void Game::move_player()
 void Game::after_player_move()
 {
 	game_state_ = player_done;
-	current_player_->set_state(Character::selected);
 }
 
 void Game::handle_z_press()

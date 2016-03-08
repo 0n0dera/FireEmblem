@@ -30,7 +30,7 @@ Scene::~Scene(void)
 void Scene::draw_level_map(const Camera& camera, SDL_Renderer* renderer) const
 {
 	SDL_RenderClear(renderer);
-	SDL_Rect camera_rect = {camera.get_camera_x(), camera.get_camera_y(), globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT};
+	SDL_Rect camera_rect = {camera.get_camera_x(), camera.get_camera_y(), Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT};
 	SDL_RenderCopy(renderer, level_map_, &camera_rect, NULL);
 }
 
@@ -38,8 +38,8 @@ void Scene::change_level_map(int level, SDL_Renderer* renderer)
 {
 	texture::load_texture_from_file(kCommonLevelMapPath + std::to_string(level) + ".png", level_map_, renderer);
 	SDL_QueryTexture(level_map_,NULL,NULL,&level_map_width_,&level_map_height_);
-	level_map_height_tiles_ = level_map_height_ / globals.TILE_SIZE;
-	level_map_width_tiles_  = level_map_width_ / globals.TILE_SIZE;
+	level_map_height_tiles_ = level_map_height_ / Globals::TILE_SIZE;
+	level_map_width_tiles_  = level_map_width_ / Globals::TILE_SIZE;
 
 	if (impassable_terrain_.size() > 0)
 	{
@@ -68,7 +68,7 @@ void Scene::change_level_map(int level, SDL_Renderer* renderer)
 void Scene::draw_selected_tile(const int x, const int y, const int size, SDL_Renderer* renderer)
 {
 	SDL_SetRenderDrawColor(renderer,255,0,0,255);
-	SDL_Rect cur_tile_rect = {x,y,globals.TILE_SIZE+size,globals.TILE_SIZE+size};
+	SDL_Rect cur_tile_rect = {x,y,Globals::TILE_SIZE+size,Globals::TILE_SIZE+size};
 	SDL_RenderDrawRect(renderer, &cur_tile_rect);
 }
 
@@ -79,8 +79,8 @@ void Scene::draw_movement_grid(const Character* const player, const Camera& came
 		move_tiles_.clear();
 		attack_tiles_.clear();
 
-		int tile_x = player->get_x() / globals.TILE_SIZE;
-		int tile_y = player->get_y() / globals.TILE_SIZE;
+		int tile_x = player->get_x() / Globals::TILE_SIZE;
+		int tile_y = player->get_y() / Globals::TILE_SIZE;
 
 		int steps = player->get_num_steps();
 		int max_atk = player->get_max_attack_range();
@@ -107,11 +107,11 @@ void Scene::draw_movement_grid(const Character* const player, const Camera& came
 			{
 				if (visited[i][j] == 1)
 				{
-					move_tiles_.push_back(std::pair<int,int>((j+offset_x)*globals.TILE_SIZE,(i+offset_y)*globals.TILE_SIZE));
+					move_tiles_.push_back(std::pair<int,int>((j+offset_x)*Globals::TILE_SIZE,(i+offset_y)*Globals::TILE_SIZE));
 				}
 				else if (visited[i][j] == 2)
 				{
-					attack_tiles_.push_back(std::pair<int,int>((j+offset_x)*globals.TILE_SIZE,(i+offset_y)*globals.TILE_SIZE));
+					attack_tiles_.push_back(std::pair<int,int>((j+offset_x)*Globals::TILE_SIZE,(i+offset_y)*Globals::TILE_SIZE));
 				}
 			}
 			delete[] visited[i];
@@ -179,7 +179,7 @@ void Scene::render_grid(const Camera& camera, SDL_Renderer* renderer)
 {
 	SDL_Rect r;
 	r.w =  globals.COLOR_TILE_SIZE;
-	r.h =  globals.COLOR_TILE_SIZE;
+	r.h =  Globals::COLOR_TILE_SIZE;
 	for (auto it = attack_tiles_.begin(); it != attack_tiles_.end(); ++it)
 	{
 		r.x = (*it).first - camera.get_camera_x() + 1;
