@@ -17,8 +17,11 @@ public:
 	void draw_movement_grid(const Character* const player, const Camera& camera, SDL_Renderer* renderer);
 	void draw_selected_tile(const int x, const int y, const int size, bool attack, SDL_Renderer* renderer);
 	void movement_grid_not_ready();
+	void draw_attack_range(const Character* const player, const Camera& camera, SDL_Renderer* renderer);
+
 	std::vector<std::pair<int,int>> attack_tiles_;
 	std::vector<std::pair<int,int>> move_tiles_;
+	std::vector<std::pair<int,int>> attack_range_;
 	std::vector<bool> impassable_terrain_;
 
 private:

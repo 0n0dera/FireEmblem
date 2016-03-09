@@ -8,7 +8,8 @@ const std::string Scene::kCommonLevelMapPath = "Levels/level_map_";
 
 Scene::Scene(SDL_Renderer* renderer): 
 	attack_tiles_(std::vector<std::pair<int,int>>()),move_tiles_(std::vector<std::pair<int,int>>()),
-	movement_grid_ready_(false),level_map_height_(0),level_map_width_(0),level_map_height_tiles_(0),level_map_width_tiles_(0),level_map_(nullptr),impassable_terrain_(std::vector<bool>()),blue_tile_(nullptr), red_tile_(nullptr),select_tile_(nullptr)
+	movement_grid_ready_(false),level_map_height_(0),level_map_width_(0),level_map_height_tiles_(0),level_map_width_tiles_(0),level_map_(nullptr),
+	impassable_terrain_(std::vector<bool>()),blue_tile_(nullptr), red_tile_(nullptr),select_tile_(nullptr),attack_range_(std::vector<std::pair<int,int>>())
 {
 	texture::load_texture_from_file("Textures/blue_tile.png", blue_tile_, renderer);
 	texture::load_texture_from_file("Textures/red_tile.png", red_tile_, renderer);
@@ -130,16 +131,13 @@ void Scene::recur_move_grid(int tile_x, int tile_y, int steps_left, const int of
 	int arr_x = tile_x - offset_x;
 	int arr_y = tile_y - offset_y;
 	visited[arr_y][arr_x] = 1;
-		
-	int cur_x;
-	int cur_y;
-
+	
 	for (int i= -max_atk; i<=max_atk;i++)
 	{
 		for (int j=std::abs(i) - max_atk; j<=max_atk - std::abs(i);j++)
 		{
-			cur_x = tile_x + i;
-			cur_y = tile_y + j;
+			int cur_x = tile_x + i;
+			int cur_y = tile_y + j;
 			if (cur_x >= 0 && cur_x < level_map_width_tiles_ && cur_y >=0 && cur_y < level_map_height_tiles_)
 			{
 				if ((std::abs(i) + std::abs(j)) >= min_atk && visited[arr_y+j][arr_x+i] != 1)
@@ -149,13 +147,7 @@ void Scene::recur_move_grid(int tile_x, int tile_y, int steps_left, const int of
 			}
 		}
 	}
-	/*for (int i = 0; i < 11; i++)
-	{
-		for (int j = 0; j < 11; j++)
-			std::cout << visited[i][j];
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;*/
+
 	if (steps_left == 0) return;
 
 	if (tile_y - 1 >= 0 && !is_tile_blocked(tile_x, tile_y-1))
@@ -180,7 +172,7 @@ void Scene::render_grid(const Camera& camera, SDL_Renderer* renderer)
 {
 	SDL_Rect r;
 	r.w =  globals.COLOR_TILE_SIZE;
-	r.h =  Globals::COLOR_TILE_SIZE;
+	r.h =  globals.COLOR_TILE_SIZE;
 	for (auto it = attack_tiles_.begin(); it != attack_tiles_.end(); ++it)
 	{
 		r.x = (*it).first - camera.get_camera_x() + 1;
@@ -205,4 +197,23 @@ void Scene::movement_grid_not_ready()
 bool Scene::is_tile_blocked(const int tile_x, const int tile_y)
 {
 	return impassable_terrain_[tile_y*level_map_width_tiles_ + tile_x];
+}
+
+void Scene::draw_attack_range(const Character* const player, const Camera& camera, SDL_Renderer* renderer)
+{
+	SDL_Rect r;
+	r.w =  globals.COLOR_TILE_SIZE;
+	r.h =  globals.COLOR_TILE_SIZE;
+
+	int max_atk = player->get_max_attack_range();
+	for (int i= -max_atk; i<=max_atk;i++)
+	{
+		for (int j=std::abs(i) - max_atk; j<=max_atk - std::abs(i);j++)
+		{
+			if (i == 0 && j == 0) continue;
+			r.x = player->get_x()-camera.get_camera_x()-i*globals.TILE_SIZE;
+			r.y = player->get_y()-camera.get_camera_y()-j*globals.TILE_SIZE;
+			SDL_RenderCopy(renderer,red_tile_,NULL,&r);
+		}
+	}
 }

@@ -9,8 +9,8 @@ Game::Game():
 	window_(SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT, SDL_WINDOW_SHOWN)),
 	screen_(SDL_GetWindowSurface(window_)),
 	renderer_(SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED)),
-	scene_(renderer_),camera_(),current_tile_(),player_vector_(boost::ptr_vector<Character>()),enemy_vector_(boost::ptr_vector<Character>()), character_map_(std::vector<Character*>(scene_.get_level_map_height_tiles()*scene_.get_level_map_width_tiles())),current_player_(nullptr),
-	saved_player_x_(0),saved_player_y_(0), saved_camera_x_(0), saved_camera_y_(0), active_players_(0), player_phase_done_(false),player_menu_()
+	scene_(renderer_),camera_(),current_tile_(),player_vector_(std::vector<Character*>()),enemy_vector_(std::vector<Character*>()), character_map_(std::vector<Character*>(scene_.get_level_map_height_tiles()*scene_.get_level_map_width_tiles())),
+	current_player_(nullptr),saved_player_x_(0),saved_player_y_(0), saved_camera_x_(0), saved_camera_y_(0), active_players_(0), player_phase_done_(false),player_menu_()
 
 {
 }
@@ -166,6 +166,11 @@ void Game::draw()
 		scene_.draw_movement_grid(current_player_,camera_,renderer_);
 	}
 
+	if (game_state_ == player_attack || (game_state_ == player_menu && player_menu_.get_selection() == 0))
+	{
+		scene_.draw_attack_range(current_player_,camera_,renderer_);
+	}
+	
 	draw_characters();
 
 	if (game_state_==none || game_state_==player_select || game_state_ == player_attack)
@@ -173,9 +178,10 @@ void Game::draw()
 		scene_.draw_selected_tile(current_tile_.get_actual_x()-camera_.get_camera_x()-current_tile_.get_frame(),current_tile_.get_actual_y()-camera_.get_camera_y()-current_tile_.get_frame(),2*current_tile_.get_frame(),game_state_==player_attack,renderer_);
 	}
 
+
 	if (game_state_ == player_menu || game_state_ == player_done)
 	{
-		player_menu_.draw(current_player_,scene_,renderer_);
+		player_menu_.draw(current_player_->get_x()-camera_.get_camera_x() > globals.SCREEN_WIDTH/2,current_player_,scene_,renderer_);
 	}
 
 	SDL_RenderPresent(renderer_);
@@ -278,6 +284,7 @@ void Game::move_player()
 void Game::after_player_move()
 {
 	game_state_ = player_menu;
+	player_menu_.set_can_attack(check_enemies_in_range());
 }
 
 void Game::reset_camera()
@@ -330,12 +337,19 @@ void Game::handle_z_press()
 			break;
 		}
 		case player_menu:
-		{
-			game_state_ = none;
-			player_unit_is_done();
-			scene_.movement_grid_not_ready();
+		case player_done:
+			switch (player_menu_.get_selection())
+			{
+				case PlayerMenu::MenuSelection::wait:
+					game_state_ = none;
+					player_unit_is_done();
+					scene_.movement_grid_not_ready();
+					break;
+				case PlayerMenu::MenuSelection::atk_or_heal:
+					game_state_ = player_attack;
+					break;
+			}
 			break;
-		}
 	}
 }
 
@@ -354,6 +368,9 @@ void Game::handle_x_press()
 			current_player_->set_state(Character::selected);
 			reset_camera();
 			break;
+		case player_attack:
+			game_state_ = player_menu;
+			break;
 
 	}
 }
@@ -366,6 +383,10 @@ void Game::handle_down_press()
 		case player_select:
 			inc_cur_tile_y(globals.TILE_SIZE);
 			break;
+		case player_menu:
+		case player_done:
+			player_menu_.inc_selection(1);
+			break;
 	}
 }
 
@@ -376,6 +397,10 @@ void Game::handle_up_press()
 		case none:
 		case player_select:
 			inc_cur_tile_y(-globals.TILE_SIZE);
+			break;
+		case player_menu:
+		case player_done:
+			player_menu_.inc_selection(-1);
 			break;
 	}
 }
@@ -405,6 +430,24 @@ void Game::handle_left_press()
 
 /************************* MENU/ATTACK RELATED METHODS **************************/
 
+bool Game::check_enemies_in_range()
+{
+	// check if enemies can be attacked
+	int max_atk = current_player_->get_max_attack_range();
+	for (int i= -max_atk; i<=max_atk;i++)
+	{
+		for (int j=std::abs(i) - max_atk; j<=max_atk - std::abs(i);j++)
+		{
+			int pos = get_unit_array_pos(current_player_->get_x()+i*globals.TILE_SIZE,current_player_->get_y()+j*globals.TILE_SIZE);
+			if (pos >= 0 && character_map_[pos] && !character_map_[pos]->is_player())
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+
+}
 
 /************************* UPDATING POSITION/END OF TURN METHODS **************************/
 
@@ -412,8 +455,8 @@ void Game::update_enemy_positions()
 {
 	for (auto it = enemy_vector_.begin(); it != enemy_vector_.end(); ++it)
 	{
-		scene_.impassable_terrain_[get_unit_array_pos((*it).get_x(), (*it).get_y())] = 1;
-		character_map_[get_unit_array_pos((*it).get_x(), (*it).get_y())] = &(*it);
+		scene_.impassable_terrain_[get_unit_array_pos((*it)->get_x(), (*it)->get_y())] = 1;
+		character_map_[get_unit_array_pos((*it)->get_x(), (*it)->get_y())] = (*it);
 	}
 }
 
@@ -421,7 +464,7 @@ void Game::update_player_positions()
 {
 	for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
 	{
-		character_map_[get_unit_array_pos((*it).get_x(),(*it).get_y())] = &(*it);
+		character_map_[get_unit_array_pos((*it)->get_x(),(*it)->get_y())] = (*it);
 	}
 }
 
@@ -445,10 +488,10 @@ void Game::draw_characters()
 {
 	for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
 	{
-		(*it).draw(camera_, renderer_);
+		(*it)->draw(camera_, renderer_);
 	}
 	for (auto it = enemy_vector_.begin(); it != enemy_vector_.end(); ++it)
 	{
-		(*it).draw(camera_, renderer_);
+		(*it)->draw(camera_, renderer_);
 	}
 }

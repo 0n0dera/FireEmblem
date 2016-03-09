@@ -14,7 +14,7 @@ public:
 		move_left = 2,
 		attacking = 1
 	};
-	Character(int x, int y, int num_steps, int min_attack_range, int max_attack_range, bool is_player, int y_start);
+	Character(int x, int y, int num_steps, int min_attack_range, int max_attack_range, bool is_player, bool is_healer, int y_start);
 	virtual ~Character(void) = 0;
 	// getters and setters
 	int get_x() const;
@@ -41,6 +41,7 @@ public:
 	void set_grey(bool val);
 	bool can_act() const;
 	void set_act(bool val);
+	bool is_healer() const;
 
 	int last_anim_frame_time_;
 
@@ -60,6 +61,7 @@ private:
 	int sprite_y_start_;
 	bool grey_;
 	bool can_act_;
+	bool is_healer_;
 };
 
 
@@ -147,4 +149,8 @@ inline bool Character::can_act() const
 inline void Character::set_act(bool val)
 {
 	can_act_ = val;
+}
+inline bool Character::is_healer() const
+{
+	return is_healer_;
 }

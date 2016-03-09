@@ -50,7 +50,8 @@ private:
 	void handle_left_press();
 
 	// menu/attack related methods
-
+	bool check_enemies_in_range();
+	
 	// updating position/end of turn methods
 	void update_enemy_positions();
 	void update_player_positions();
@@ -71,8 +72,8 @@ private:
 	Scene scene_;
 	Camera camera_;
 	CurrentTile current_tile_;
-	boost::ptr_vector<Character> player_vector_;
-	boost::ptr_vector<Character> enemy_vector_;
+	std::vector<Character*> player_vector_;
+	std::vector<Character*> enemy_vector_;
 	std::vector<Character*> character_map_;
 	Character* current_player_;
 	int saved_player_x_;
