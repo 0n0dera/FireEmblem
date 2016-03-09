@@ -58,6 +58,8 @@ private:
 
 	// helper methods
 	int get_unit_array_pos(const int x, const int y);
+	void draw_characters();
+	void enemy_phase();
 
 	int level_;
 	GameState game_state_;
@@ -69,8 +71,8 @@ private:
 	Scene scene_;
 	Camera camera_;
 	CurrentTile current_tile_;
-	std::vector<Character*> player_vector_;
-	std::vector<Character*> enemy_vector_;
+	boost::ptr_vector<Character> player_vector_;
+	boost::ptr_vector<Character> enemy_vector_;
 	std::vector<Character*> character_map_;
 	Character* current_player_;
 	int saved_player_x_;
@@ -78,4 +80,6 @@ private:
 	int saved_camera_x_;
 	int saved_camera_y_;
 	PlayerMenu player_menu_;
+	int active_players_;
+	bool player_phase_done_;
 };

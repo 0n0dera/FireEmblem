@@ -9,8 +9,9 @@ Game::Game():
 	window_(SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT, SDL_WINDOW_SHOWN)),
 	screen_(SDL_GetWindowSurface(window_)),
 	renderer_(SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED)),
-	scene_(renderer_),camera_(),current_tile_(),player_vector_(std::vector<Character*>()),enemy_vector_(std::vector<Character*>()), character_map_(std::vector<Character*>(scene_.get_level_map_height_tiles()*scene_.get_level_map_width_tiles())),current_player_(nullptr),
-	saved_player_x_(0),saved_player_y_(0), saved_camera_x_(0), saved_camera_y_(0),player_menu_()
+	scene_(renderer_),camera_(),current_tile_(),player_vector_(boost::ptr_vector<Character>()),enemy_vector_(boost::ptr_vector<Character>()), character_map_(std::vector<Character*>(scene_.get_level_map_height_tiles()*scene_.get_level_map_width_tiles())),current_player_(nullptr),
+	saved_player_x_(0),saved_player_y_(0), saved_camera_x_(0), saved_camera_y_(0), active_players_(0), player_phase_done_(false),player_menu_()
+
 {
 }
 
@@ -32,6 +33,7 @@ bool Game::init()
 
 	// load players
 	player_vector_.push_back(new Swordsman(0,0,true));
+	active_players_ = player_vector_.size();
 
 	// load enemies
 	enemy_vector_.push_back(new Swordsman(0,3*g,false));
@@ -126,15 +128,31 @@ void Game::handle_events()
 
 void Game::update()
 {
-	current_tile_.inc_frame();
+	if (active_players_ == 0 || player_phase_done_)
+	{
+		game_state_ = enemy_move;
+	}
 	switch (game_state_)
 	{
 		case none:
+			if (character_map_[get_unit_array_pos(current_tile_.get_actual_x(), current_tile_.get_actual_y())] != nullptr
+				&& !character_map_[get_unit_array_pos(current_tile_.get_actual_x(), current_tile_.get_actual_y())]->is_grey()
+				&& character_map_[get_unit_array_pos(current_tile_.get_actual_x(), current_tile_.get_actual_y())]->is_player())
+			{
+				current_tile_.set_frame_max();
+			}
+			else
+			{
+				current_tile_.inc_frame();
+			}
 			break;
 		case player_select:
+			current_tile_.inc_frame();
 			break;
 		case player_move:
 			move_player();
+			break;
+		case player_attack:
 			break;
 	}
 }
@@ -145,20 +163,14 @@ void Game::draw()
 
 	if (game_state_ == player_select)
 	{
-		scene_.draw_movement_grid(current_player_,camera_,enemy_vector_,renderer_);
-	}
-	for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
-	{
-		(*it)->draw(camera_,renderer_);
-	}
-	for (auto it = enemy_vector_.begin(); it != enemy_vector_.end(); ++it)
-	{
-		(*it)->draw(camera_,renderer_);
+		scene_.draw_movement_grid(current_player_,camera_,renderer_);
 	}
 
-	if (game_state_ != player_move)
+	draw_characters();
+
+	if (game_state_==none || game_state_==player_select || game_state_ == player_attack)
 	{
-		scene_.draw_selected_tile(current_tile_.get_actual_x()-camera_.get_camera_x()-current_tile_.get_frame(),current_tile_.get_actual_y()-camera_.get_camera_y()-current_tile_.get_frame(),2*current_tile_.get_frame(),renderer_);
+		scene_.draw_selected_tile(current_tile_.get_actual_x()-camera_.get_camera_x()-current_tile_.get_frame(),current_tile_.get_actual_y()-camera_.get_camera_y()-current_tile_.get_frame(),2*current_tile_.get_frame(),game_state_==player_attack,renderer_);
 	}
 
 	if (game_state_ == player_menu || game_state_ == player_done)
@@ -317,7 +329,7 @@ void Game::handle_z_press()
 			}
 			break;
 		}
-		case player_done:
+		case player_menu:
 		{
 			game_state_ = none;
 			player_unit_is_done();
@@ -400,8 +412,8 @@ void Game::update_enemy_positions()
 {
 	for (auto it = enemy_vector_.begin(); it != enemy_vector_.end(); ++it)
 	{
-		scene_.impassable_terrain_[get_unit_array_pos((*it)->get_x(), (*it)->get_y())] = 1;
-		character_map_[get_unit_array_pos((*it)->get_x(), (*it)->get_y())] = *it;
+		scene_.impassable_terrain_[get_unit_array_pos((*it).get_x(), (*it).get_y())] = 1;
+		character_map_[get_unit_array_pos((*it).get_x(), (*it).get_y())] = &(*it);
 	}
 }
 
@@ -409,7 +421,7 @@ void Game::update_player_positions()
 {
 	for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
 	{
-		character_map_[get_unit_array_pos((*it)->get_x(),(*it)->get_y())] = *it;
+		character_map_[get_unit_array_pos((*it).get_x(),(*it).get_y())] = &(*it);
 	}
 }
 
@@ -427,4 +439,16 @@ void Game::player_unit_is_done()
 int Game::get_unit_array_pos(const int x, const int y)
 {
 	return y/globals.TILE_SIZE*scene_.get_level_map_width_tiles()+x/globals.TILE_SIZE;
+}
+
+void Game::draw_characters()
+{
+	for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
+	{
+		(*it).draw(camera_, renderer_);
+	}
+	for (auto it = enemy_vector_.begin(); it != enemy_vector_.end(); ++it)
+	{
+		(*it).draw(camera_, renderer_);
+	}
 }

@@ -17,6 +17,7 @@
 #include "load_texture.h"
 #include <vector>
 #include <algorithm>
+#include <boost\ptr_container\ptr_vector.hpp>
 
 #undef main
 

@@ -12,11 +12,14 @@ public:
 	void set_actual_y(int y);
 	void inc_frame();
 	int get_frame() const;
+	void set_frame_max();
 
 private:
+	const int frame_max_;
 	int frame_;
 	int actual_x_;
 	int actual_y_;
+	int anim_delay_;
 };
 
 inline int CurrentTile::get_actual_x() const

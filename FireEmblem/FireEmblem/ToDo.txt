@@ -11,7 +11,9 @@
 		- check if impassible terrain (an enemy counts as impassable terrain)
 (DONE) Fix up game states input handling (up down left right handlers)
 
-- draw player grey states, use player counter to track nongrey players. If player counter == 0, enemy turn
+- add row to player sprite sheet for grey, draw player grey states,
+- use player counter to track nongrey players. If player counter == 0 or player_phase_done_ (menu option), enemy turn
+- when enemy turn done, set player counter to vector size and player_phase_done_ false
 - work on attacking!
 
 Anna

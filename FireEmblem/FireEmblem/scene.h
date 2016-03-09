@@ -14,8 +14,8 @@ public:
 	int get_level_map_width() const;
 	int get_level_map_height_tiles() const;
 	int get_level_map_width_tiles() const;
-	void draw_movement_grid(const Character* const player, const Camera& camera, const std::vector<Character*>& enemies, SDL_Renderer* renderer);
-	void draw_selected_tile(const int x, const int y, const int size, SDL_Renderer* renderer);
+	void draw_movement_grid(const Character* const player, const Camera& camera, SDL_Renderer* renderer);
+	void draw_selected_tile(const int x, const int y, const int size, bool attack, SDL_Renderer* renderer);
 	void movement_grid_not_ready();
 	std::vector<std::pair<int,int>> attack_tiles_;
 	std::vector<std::pair<int,int>> move_tiles_;
@@ -24,7 +24,7 @@ public:
 private:
 	static const std::string kCommonLevelMapPath;
 	void render_grid(const Camera& camera, SDL_Renderer* renderer);
-	void recur_move_grid(int tile_x, int tile_y, int steps_left,const int offset_x, const int offset_y, const int min_atk, const int max_atk, const std::vector<Character*>& enemies, int**& visited);	
+	void recur_move_grid(int tile_x, int tile_y, int steps_left,const int offset_x, const int offset_y, const int min_atk, const int max_atk, int**& visited);	
 	bool is_tile_blocked(const int tile_x, const int tile_y);
 
 	bool movement_grid_ready_;
@@ -35,7 +35,7 @@ private:
 	SDL_Texture* level_map_;
 	SDL_Texture* blue_tile_;
 	SDL_Texture* red_tile_;
-	
+	SDL_Texture* select_tile_;
 };
 
 inline int Scene::get_level_map_width() const

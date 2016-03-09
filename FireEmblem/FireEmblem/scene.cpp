@@ -8,10 +8,11 @@ const std::string Scene::kCommonLevelMapPath = "Levels/level_map_";
 
 Scene::Scene(SDL_Renderer* renderer): 
 	attack_tiles_(std::vector<std::pair<int,int>>()),move_tiles_(std::vector<std::pair<int,int>>()),
-	movement_grid_ready_(false),level_map_height_(0),level_map_width_(0),level_map_height_tiles_(0),level_map_width_tiles_(0),level_map_(nullptr),impassable_terrain_(std::vector<bool>()),blue_tile_(nullptr), red_tile_(nullptr)
+	movement_grid_ready_(false),level_map_height_(0),level_map_width_(0),level_map_height_tiles_(0),level_map_width_tiles_(0),level_map_(nullptr),impassable_terrain_(std::vector<bool>()),blue_tile_(nullptr), red_tile_(nullptr),select_tile_(nullptr)
 {
 	texture::load_texture_from_file("Textures/blue_tile.png", blue_tile_, renderer);
 	texture::load_texture_from_file("Textures/red_tile.png", red_tile_, renderer);
+	texture::load_texture_from_file("Textures/select_tile.png", select_tile_, renderer);
 	SDL_SetTextureBlendMode(blue_tile_,SDL_BLENDMODE_BLEND);
 	SDL_SetTextureBlendMode(red_tile_,SDL_BLENDMODE_BLEND);
 	SDL_SetTextureAlphaMod(blue_tile_,155);
@@ -25,12 +26,13 @@ Scene::~Scene(void)
 	SDL_DestroyTexture(level_map_);
 	SDL_DestroyTexture(blue_tile_);
 	SDL_DestroyTexture(red_tile_);
+	SDL_DestroyTexture(select_tile_);
 }
 
 void Scene::draw_level_map(const Camera& camera, SDL_Renderer* renderer) const
 {
 	SDL_RenderClear(renderer);
-	SDL_Rect camera_rect = {camera.get_camera_x(), camera.get_camera_y(), Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT};
+	SDL_Rect camera_rect = {camera.get_camera_x(), camera.get_camera_y(), globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT};
 	SDL_RenderCopy(renderer, level_map_, &camera_rect, NULL);
 }
 
@@ -65,14 +67,13 @@ void Scene::change_level_map(int level, SDL_Renderer* renderer)
 	infile.close();
 }
 
-void Scene::draw_selected_tile(const int x, const int y, const int size, SDL_Renderer* renderer)
+void Scene::draw_selected_tile(const int x, const int y, const int size,bool attack, SDL_Renderer* renderer)
 {
-	SDL_SetRenderDrawColor(renderer,255,0,0,255);
-	SDL_Rect cur_tile_rect = {x,y,Globals::TILE_SIZE+size,Globals::TILE_SIZE+size};
-	SDL_RenderDrawRect(renderer, &cur_tile_rect);
+	SDL_Rect cur_tile_rect = {x, y, globals.TILE_SIZE+size, globals.TILE_SIZE+size};
+	SDL_RenderCopy(renderer, select_tile_,NULL,&cur_tile_rect);
 }
 
-void Scene::draw_movement_grid(const Character* const player, const Camera& camera, const std::vector<Character*>& enemies, SDL_Renderer* renderer)
+void Scene::draw_movement_grid(const Character* const player, const Camera& camera, SDL_Renderer* renderer)
 {
 	if (!movement_grid_ready_)
 	{
@@ -99,7 +100,7 @@ void Scene::draw_movement_grid(const Character* const player, const Camera& came
 		int offset_x = tile_x - steps - max_atk;
 		int offset_y = tile_y - steps - max_atk;
 
-		recur_move_grid(tile_x, tile_y, steps, offset_x, offset_y, min_atk, max_atk, enemies, visited);
+		recur_move_grid(tile_x, tile_y, steps, offset_x, offset_y, min_atk, max_atk, visited);
 		
 		for (int i = 0; i < grid_size; i++)
 		{
@@ -124,7 +125,7 @@ void Scene::draw_movement_grid(const Character* const player, const Camera& came
 	
 }
 
-void Scene::recur_move_grid(int tile_x, int tile_y, int steps_left, const int offset_x, const int offset_y, const int min_atk, const int max_atk, const std::vector<Character*>& enemies, int**& visited)
+void Scene::recur_move_grid(int tile_x, int tile_y, int steps_left, const int offset_x, const int offset_y, const int min_atk, const int max_atk, int**& visited)
 {
 	int arr_x = tile_x - offset_x;
 	int arr_y = tile_y - offset_y;
@@ -159,19 +160,19 @@ void Scene::recur_move_grid(int tile_x, int tile_y, int steps_left, const int of
 
 	if (tile_y - 1 >= 0 && !is_tile_blocked(tile_x, tile_y-1))
 	{
-		recur_move_grid(tile_x, tile_y-1, steps_left-1, offset_x, offset_y, min_atk,max_atk, enemies, visited);
+		recur_move_grid(tile_x, tile_y-1, steps_left-1, offset_x, offset_y, min_atk,max_atk, visited);
 	}
 	if (tile_x + 1 < level_map_width_tiles_ && !is_tile_blocked(tile_x + 1, tile_y))
 	{
-		recur_move_grid(tile_x+1, tile_y, steps_left-1, offset_x, offset_y, min_atk,max_atk,enemies, visited);
+		recur_move_grid(tile_x+1, tile_y, steps_left-1, offset_x, offset_y, min_atk,max_atk, visited);
 	}
 	if (tile_y + 1 < level_map_height_tiles_ && !is_tile_blocked(tile_x, tile_y+1))
 	{
-		recur_move_grid(tile_x, tile_y+1, steps_left-1, offset_x, offset_y, min_atk,max_atk,enemies, visited);
+		recur_move_grid(tile_x, tile_y+1, steps_left-1, offset_x, offset_y, min_atk,max_atk, visited);
 	}
 	if (tile_x - 1 >= 0 && !is_tile_blocked(tile_x - 1,tile_y))
 	{
-		recur_move_grid(tile_x-1, tile_y, steps_left-1, offset_x, offset_y,min_atk,max_atk, enemies, visited);
+		recur_move_grid(tile_x-1, tile_y, steps_left-1, offset_x, offset_y,min_atk,max_atk, visited);
 	}
 }
 
