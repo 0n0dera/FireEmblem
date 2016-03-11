@@ -74,7 +74,7 @@ void Scene::draw_selected_tile(const int x, const int y, const int size,bool att
 	SDL_RenderCopy(renderer, select_tile_,NULL,&cur_tile_rect);
 }
 
-void Scene::draw_movement_grid(const Character* const player, const Camera& camera, SDL_Renderer* renderer)
+void Scene::draw_movement_grid(const std::shared_ptr<Character>& player, const Camera& camera, SDL_Renderer* renderer)
 {
 	if (!movement_grid_ready_)
 	{
@@ -199,7 +199,7 @@ bool Scene::is_tile_blocked(const int tile_x, const int tile_y)
 	return impassable_terrain_[tile_y*level_map_width_tiles_ + tile_x];
 }
 
-void Scene::draw_attack_range(const Character* const player, const Camera& camera, SDL_Renderer* renderer)
+void Scene::draw_attack_range(const std::shared_ptr<Character>& player, const Camera& camera, SDL_Renderer* renderer)
 {
 	SDL_Rect r;
 	r.w =  globals.COLOR_TILE_SIZE;

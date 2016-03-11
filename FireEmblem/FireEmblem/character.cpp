@@ -1,21 +1,19 @@
 #include "stdafx.h"
 #include "character.h"
-#include "../sprite_sheet.h"
-#include "../Items/Potions/potion.h"
+#include "sprite_sheet.h"
+#include "potion.h"
+#include "character_data.h"
+#include "weapon.h"
 
-Character::Character(std::string name, bool is_mc, int x, int y, int num_steps, bool is_player, bool is_healer, Stats stats): 
-	name_(name),is_mc_(is_mc),x_(x), y_(y), old_x_(x),old_y_(y),state_(idle), frame_(0), anim_delay_(100), last_anim_frame_time_(0), num_steps_(num_steps), is_player_(is_player), 
-	sprite_y_start_(SpriteSheet::get_y_start(name)), grey_(false),can_act_(true),is_healer_(is_healer),	stats_(stats),
-	cur_weapon_(nullptr),weapon_list_(std::vector<Weapon*>()),inventory_(std::vector<Item*>())
+Character::Character(std::string name, CharacterClass c_class, int x, int y, bool is_player, Stats stats): 
+	name_(name),class_(c_class),x_(x), y_(y), old_x_(x),old_y_(y),state_(idle), frame_(0), anim_delay_(100), last_anim_frame_time_(0), num_steps_(CharacterData::steps_vector_[c_class]), is_player_(is_player), 
+	sprite_y_start_(SpriteSheet::unit_y_start_map.at(name)), grey_(false),can_act_(true),stats_(stats),
+	cur_weapon_(std::shared_ptr<Weapon>()),weapon_list_(std::vector<std::shared_ptr<Weapon>>()),inventory_(std::vector<std::shared_ptr<Item>>()),equippable_weapon_mask_(CharacterData::equippable_weapons_vector_.at(c_class))
 {
 }
 
 Character::~Character()
 {
-	for (auto it = inventory_.begin(); it != inventory_.end(); ++it)
-	{
-		delete (*it);
-	}
 };
 
 int Character::get_max_attack_range() const
@@ -80,19 +78,32 @@ void Character::draw(const Camera& camera, SDL_Renderer* renderer)
 	SDL_RenderCopy(renderer, SpriteSheet::player_sprites_, &src_rect, &dest_rect);
 }
 
-bool Character::attack(Character* const enemy)
+bool Character::attack(const std::shared_ptr<Character> enemy)
 {
 	// do dmg calcs
-
+	return false;
 }
 
-void Character::give_weapon(Weapon* const weapon)
+bool Character::can_equip(const Weapon* const weapon)
+{
+	return ((weapon->get_type() & equippable_weapon_mask_) != 0);
+}
+
+void Character::set_weapon(Weapon* const weapon)
+{
+	if (can_equip(weapon))
+	{
+		cur_weapon_.reset(weapon);
+	}
+}
+
+void Character::give_weapon(const std::shared_ptr<Weapon> weapon)
 {
 	weapon_list_.push_back(weapon);
 	inventory_.push_back(weapon);
 }
 
-void Character::give_item(Item* const item)
+void Character::give_item(const std::shared_ptr<Item> item)
 {
 	inventory_.push_back(item);
 }

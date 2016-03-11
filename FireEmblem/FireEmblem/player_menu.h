@@ -13,13 +13,13 @@ public:
 	};
 	PlayerMenu(void);
 	~PlayerMenu(void);
-	void draw(bool left_side, const Character* const player, const Scene& scene, SDL_Renderer* renderer);
+	void draw(bool left_side, const std::shared_ptr<Character>& player, const Scene& scene, SDL_Renderer* renderer);
 	int get_selection() const;
 	void inc_selection(int inc);
 	void set_can_attack(bool val);
 	 
 private:
-	void draw_menu(const int x, const Character* const player, SDL_Renderer* renderer);
+	void draw_menu(const int x, const std::shared_ptr<Character>& player, SDL_Renderer* renderer);
 
 	const int left_side_;
 	const int right_side_;

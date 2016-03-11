@@ -42,8 +42,8 @@ private:
 	void after_move_player();
 	void move_enemy();
 	void after_move_enemy();
-	void reset_camera();
-	void camera_follow(const Character* const unit);
+	void reset_camera(const std::shared_ptr<Character>& unit);
+	void camera_follow(const std::shared_ptr<Character>& unit);
 	
 	// button press handlers
 	void handle_z_press();
@@ -59,7 +59,7 @@ private:
 	// updating position/end of turn methods
 	void update_enemy_positions();
 	void update_player_positions();
-	void unit_is_done(Character* const unit);
+	void unit_is_done(const std::shared_ptr<Character>& unit);
 
 	// helper methods
 	int get_unit_array_pos(const int x, const int y);
@@ -77,10 +77,11 @@ private:
 	Scene scene_;
 	Camera camera_;
 	CurrentTile current_tile_;
-	std::vector<Character*> player_vector_;
-	std::vector<Character*> enemy_vector_;
+	std::vector<std::shared_ptr<Character>> player_vector_;
+	std::vector<std::shared_ptr<Character>> enemy_vector_;
 	std::vector<Character*> character_map_;
-	Character* current_player_;
+	std::shared_ptr<Character> current_player_;
+	std::shared_ptr<Character> mc_;
 	int saved_camera_x_;
 	int saved_camera_y_;
 	PlayerMenu player_menu_;

@@ -1,6 +1,6 @@
 #pragma once
 #include "camera.h"
-#include "Characters\character.h"
+#include "character.h"
 #include <map>
 
 class Scene
@@ -14,10 +14,10 @@ public:
 	int get_level_map_width() const;
 	int get_level_map_height_tiles() const;
 	int get_level_map_width_tiles() const;
-	void draw_movement_grid(const Character* const player, const Camera& camera, SDL_Renderer* renderer);
+	void draw_movement_grid(const std::shared_ptr<Character>& player, const Camera& camera, SDL_Renderer* renderer);
 	void draw_selected_tile(const int x, const int y, const int size, bool attack, SDL_Renderer* renderer);
 	void movement_grid_not_ready();
-	void draw_attack_range(const Character* const player, const Camera& camera, SDL_Renderer* renderer);
+	void draw_attack_range(const std::shared_ptr<Character>& player, const Camera& camera, SDL_Renderer* renderer);
 
 	std::vector<std::pair<int,int>> attack_tiles_;
 	std::vector<std::pair<int,int>> move_tiles_;

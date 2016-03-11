@@ -1,10 +1,7 @@
 #include "stdafx.h"
 #include "sprite_sheet.h"
-#include "Characters/swordsman.h"
-#include "Characters/character.h"
-#include "Characters/archer.h"
-#include "Characters/mage.h"
-#include "Characters/stats.h"
+#include "character.h"
+#include "stats.h"
 #include "game.h"
 
 Game::Game():
@@ -12,8 +9,8 @@ Game::Game():
 	window_(SDL_CreateWindow("Fire Emblem", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT, SDL_WINDOW_SHOWN)),
 	screen_(SDL_GetWindowSurface(window_)),
 	renderer_(SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED)),
-	scene_(renderer_),camera_(),current_tile_(),player_vector_(std::vector<Character*>()),enemy_vector_(std::vector<Character*>()), character_map_(std::vector<Character*>(scene_.get_level_map_height_tiles()*scene_.get_level_map_width_tiles())),
-	current_player_(nullptr), saved_camera_x_(0), saved_camera_y_(0), active_players_(0), player_menu_(), active_enemies_(0)
+	scene_(renderer_),camera_(),current_tile_(),player_vector_(std::vector<std::shared_ptr<Character>>()),enemy_vector_(std::vector<std::shared_ptr<Character>>()), character_map_(std::vector<Character*>(scene_.get_level_map_height_tiles()*scene_.get_level_map_width_tiles())),
+	current_player_(std::shared_ptr<Character>()), saved_camera_x_(0), saved_camera_y_(0), active_players_(0), player_menu_(), active_enemies_(0), mc_(std::shared_ptr<Character>())
 {
 }
 
@@ -285,12 +282,12 @@ void Game::after_move_enemy()
 	// otherwise, unit is done
 }
 
-void Game::reset_camera()
+void Game::reset_camera(const std::shared_ptr<Character>& unit)
 {
-	current_player_->set_x(current_player_->get_old_x());
-	current_player_->set_y(current_player_->get_old_y());
-	current_tile_.set_actual_x(current_player_->get_old_x());
-	current_tile_.set_actual_y(current_player_->get_old_y());
+	unit->set_x(unit->get_old_x());
+	unit->set_y(unit->get_old_y());
+	current_tile_.set_actual_x(unit->get_old_x());
+	current_tile_.set_actual_y(unit->get_old_y());
 	camera_.set_camera_x(saved_camera_x_);
 	camera_.set_camera_y(saved_camera_y_);
 }
@@ -308,7 +305,7 @@ void Game::handle_z_press()
 			if (temp != nullptr && temp->is_player() && !temp->is_grey())
 			{
 				game_state_ = player_select;
-				current_player_ = temp;
+				current_player_.reset(temp);
 				current_player_->set_state(Character::selected);
 				current_player_->set_old_x(current_player_->get_x());
 				current_player_->set_old_y(current_player_->get_y());
@@ -329,7 +326,7 @@ void Game::handle_z_press()
 				if ((*it).first == current_tile_.get_actual_x() && (*it).second == current_tile_.get_actual_y())
 				{
 					if (character_map_[get_unit_array_pos(current_tile_.get_actual_x(),current_tile_.get_actual_y())] == nullptr || 
-						character_map_[get_unit_array_pos(current_tile_.get_actual_x(),current_tile_.get_actual_y())] == current_player_)
+						character_map_[get_unit_array_pos(current_tile_.get_actual_x(),current_tile_.get_actual_y())] == current_player_.get())
 					{
 						game_state_ = player_move;
 						return;
@@ -369,12 +366,12 @@ void Game::handle_x_press()
 			game_state_ = none;
 			scene_.movement_grid_not_ready();
 			current_player_->set_state(Character::idle);
-			reset_camera();
+			reset_camera(current_player_);
 			break;
 		case player_menu:
 			game_state_ = player_select;
 			current_player_->set_state(Character::selected);
-			reset_camera();
+			reset_camera(current_player_);
 			break;
 		case player_attack:
 			game_state_ = player_menu;
@@ -467,7 +464,7 @@ void Game::update_enemy_positions()
 	for (auto it = enemy_vector_.begin(); it != enemy_vector_.end(); ++it)
 	{
 		scene_.impassable_terrain_[get_unit_array_pos((*it)->get_x(), (*it)->get_y())] = 1;
-		character_map_[get_unit_array_pos((*it)->get_x(), (*it)->get_y())] = (*it);
+		character_map_[get_unit_array_pos((*it)->get_x(), (*it)->get_y())] = (*it).get();
 	}
 }
 
@@ -475,16 +472,16 @@ void Game::update_player_positions()
 {
 	for (auto it = player_vector_.begin(); it != player_vector_.end(); ++it)
 	{
-		character_map_[get_unit_array_pos((*it)->get_x(),(*it)->get_y())] = (*it);
+		character_map_[get_unit_array_pos((*it)->get_x(),(*it)->get_y())] = (*it).get();
 	}
 }
 
-void Game::unit_is_done(Character* const unit)
+void Game::unit_is_done(const std::shared_ptr<Character>& unit)
 {
 	unit->set_state(Character::idle);
 	unit->set_grey(true);
 	character_map_[get_unit_array_pos(unit->get_old_x(),unit->get_old_y())] = nullptr;
-	character_map_[get_unit_array_pos(unit->get_x(),unit->get_y())] = unit;
+	character_map_[get_unit_array_pos(unit->get_x(),unit->get_y())] = unit.get();
 	if (unit->is_player())
 	{
 		if (--active_players_ == 0)
@@ -499,7 +496,7 @@ void Game::unit_is_done(Character* const unit)
 		{
 			game_state_ = none;
 			active_players_ = player_vector_.size();
-			reset_camera(); // reset to MC actually
+			reset_camera(mc_); // reset to MC actually
 		}
 	}
 }
@@ -526,21 +523,21 @@ void Game::draw_characters()
 
 void Game::create_players()
 {
-	Character* cur;
+	std::shared_ptr<Character> cur(new Character("Seth",Character::cavalier,0,0,true,Stats(20,10,10,10,10)));
 
-	cur = new Swordsman("Eirika",true,0,0,true,Stats(20,10,10,10,10));
 	// give weapons and items
-	// load players
+
+	// add player to vector
 	player_vector_.push_back(cur);
+	// set mc
+	mc_ = cur;
 
 	// add more players
-
-
-
+	
 	active_players_ = player_vector_.size();
 
 	// load enemies
-	cur = new Swordsman("Enemy",false,0,globals.TILE_SIZE,false,Stats(20,10,10,10,10));
+	cur.reset(new Character("Enemy",Character::swordsman,0,globals.TILE_SIZE,false,Stats(20,10,10,10,10)));
 	// give enemy weapon(s)
 
 	enemy_vector_.push_back(cur);

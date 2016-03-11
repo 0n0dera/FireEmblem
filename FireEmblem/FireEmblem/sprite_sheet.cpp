@@ -22,11 +22,6 @@ std::map<std::string,int> SpriteSheet::create_map()
 	return m;
 }
 
-int SpriteSheet::get_y_start(std::string name)
-{
-	return unit_y_start_map.at(name);
-}
-
 SpriteSheet::~SpriteSheet()
 {
 	SDL_DestroyTexture(player_sprites_);

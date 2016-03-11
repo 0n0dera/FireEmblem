@@ -1,8 +1,8 @@
 #pragma once
 #include "camera.h"
 #include "stats.h"
-#include "Items\Weapons\weapon.h"
-#include "Items\item.h"
+#include "weapon.h"
+#include "item.h"
 
 class Potion;
 
@@ -10,6 +10,14 @@ class Character
 {
 
 public:
+	enum CharacterClass {
+		cavalier,
+		swordsman,
+		mage,
+		archer,
+		axeman,
+		healer
+	};
 	enum CharacterState { 
 		idle = 0, 
 		selected = 4, 
@@ -19,10 +27,11 @@ public:
 		move_left = 2,
 		attacking = 1
 	};
-	Character(std::string name, bool is_mc, int x, int y, int num_steps, bool is_player, bool is_healer, Stats stats);
-	virtual ~Character(void) = 0;
+	Character(std::string name, CharacterClass c_class, int x, int y, bool is_player, Stats stats);
+	~Character(void);
 
 	std::string get_name() const;
+	CharacterClass get_class() const;
 
 	// position methods
 	int get_x() const;
@@ -54,8 +63,6 @@ public:
 	void set_grey(bool val);
 	bool can_act() const;
 	void set_act(bool val);
-	bool is_healer() const; // this is bad
-	bool is_mc() const;
 
 	// stats methods
 	int get_hp() const;
@@ -67,12 +74,13 @@ public:
 	void set_hp(int hp);
 
 	// weapon/item methods
-	virtual void set_weapon(Weapon* const weapon) = 0;
-	void give_weapon(Weapon* const weapon);
-	void give_item(Item* const item);
+	void set_weapon(Weapon* const weapon);
+	void give_weapon(const std::shared_ptr<Weapon> weapon);
+	void give_item(const std::shared_ptr<Item> item);
+	bool can_equip(const Weapon* const weapon);
 
 	// attack
-	virtual bool attack(Character* const enemy);
+	virtual bool attack(const std::shared_ptr<Character> enemy);
 
 
 private:
@@ -83,7 +91,9 @@ private:
 	void inc_frame();
 	
 	const std::string name_;
-	
+	CharacterClass class_;
+	int equippable_weapon_mask_;
+
 	int x_;
 	int y_;
 	int old_x_;
@@ -101,16 +111,14 @@ private:
 	bool is_player_;
 	bool grey_;
 	bool can_act_;
-	bool is_healer_; // this is bad
-	bool is_mc_;
 
 	//stats
 	Stats stats_;
 
 	// items
-	Weapon* cur_weapon_;
-	std::vector<Weapon*> weapon_list_;
-	std::vector<Item*> inventory_;
+	std::shared_ptr<Weapon> cur_weapon_;
+	std::vector<std::shared_ptr<Weapon>> weapon_list_;
+	std::vector<std::shared_ptr<Item>> inventory_;
 
 };
 
@@ -206,13 +214,14 @@ inline void Character::set_act(bool val)
 {
 	can_act_ = val;
 }
-inline bool Character::is_healer() const
-{
-	return is_healer_;
-}
+
 inline int Character::get_hp() const
 {
 	return stats_.hp_;
+}
+inline void Character::set_hp(int hp)
+{
+	stats_.hp_ = hp;
 }
 inline int Character::get_max_hp() const
 {
@@ -239,7 +248,7 @@ inline std::string Character::get_name() const
 {
 	return name_;
 }
-inline bool Character::is_mc() const
+inline Character::CharacterClass Character::get_class() const
 {
-	return is_mc_;
+	return class_;
 }

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "player_menu.h"
 #include "scene.h"
-#include "Characters\character.h"
+#include "character.h"
 
 PlayerMenu::PlayerMenu(void):selection_(0),left_side_(20),right_side_(globals.SCREEN_WIDTH-120),menu_width_(100),menu_y_(20),item_height_(30)
 {
@@ -12,7 +12,7 @@ PlayerMenu::~PlayerMenu(void)
 {
 }
 
-void PlayerMenu::draw(bool left_side, const Character* const player, const Scene& scene, SDL_Renderer* renderer)
+void PlayerMenu::draw(bool left_side, const std::shared_ptr<Character>& player, const Scene& scene, SDL_Renderer* renderer)
 {
 	if (left_side)
 	{
@@ -25,16 +25,16 @@ void PlayerMenu::draw(bool left_side, const Character* const player, const Scene
 }
 
 
-void PlayerMenu::draw_menu(const int x, const Character* const player, SDL_Renderer* renderer)
+void PlayerMenu::draw_menu(const int x, const std::shared_ptr<Character>& player, SDL_Renderer* renderer)
 {
 	SDL_Rect rect = {x, menu_y_,menu_width_,10};
 	SDL_SetRenderDrawColor(renderer, 50,50,50,255);
 	SDL_RenderFillRect(renderer, &rect);
 	int num_opts = 0;
 
-	if (player && player->can_act())
+	if (player.get() && player->can_act())
 	{
-		if (!player->is_healer())
+		if (!(player->get_class() == Character::healer))
 		{
 			// draw attack
 			SDL_SetRenderDrawColor(renderer, 255,0,0,255);

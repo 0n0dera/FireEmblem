@@ -18,6 +18,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <memory>
 
 #undef main
 
