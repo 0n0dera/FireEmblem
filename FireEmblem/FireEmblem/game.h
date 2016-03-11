@@ -23,7 +23,8 @@ private:
 		player_attack,	// unit has stopped moving and can attack
 		fight,			// fight scene
 		player_done,
-		enemy_move		// enemy is moving
+		enemy_move,		// enemy is moving
+		turn_menu		// player presses z on empty tile
 	};
 
 	// core methods
@@ -38,9 +39,12 @@ private:
 	void inc_cur_tile_x(int amount);
 	void inc_cur_tile_y(int amount);
 	void move_player();
-	void after_player_move();
+	void after_move_player();
+	void move_enemy();
+	void after_move_enemy();
 	void reset_camera();
-
+	void camera_follow(const Character* const unit);
+	
 	// button press handlers
 	void handle_z_press();
 	void handle_x_press();
@@ -55,12 +59,13 @@ private:
 	// updating position/end of turn methods
 	void update_enemy_positions();
 	void update_player_positions();
-	void player_unit_is_done();
+	void unit_is_done(Character* const unit);
 
 	// helper methods
 	int get_unit_array_pos(const int x, const int y);
 	void draw_characters();
 	void enemy_phase();
+	void create_players();
 
 	int level_;
 	GameState game_state_;
@@ -76,11 +81,9 @@ private:
 	std::vector<Character*> enemy_vector_;
 	std::vector<Character*> character_map_;
 	Character* current_player_;
-	int saved_player_x_;
-	int saved_player_y_;
 	int saved_camera_x_;
 	int saved_camera_y_;
 	PlayerMenu player_menu_;
 	int active_players_;
-	bool player_phase_done_;
+	int active_enemies_;
 };

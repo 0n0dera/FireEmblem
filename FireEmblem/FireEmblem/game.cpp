@@ -2,16 +2,18 @@
 #include "sprite_sheet.h"
 #include "Characters/swordsman.h"
 #include "Characters/character.h"
+#include "Characters/archer.h"
+#include "Characters/mage.h"
+#include "Characters/stats.h"
 #include "game.h"
 
 Game::Game():
 	level_(1), game_state_(none), is_running_(false),is_fullscreen_(false),
-	window_(SDL_CreateWindow("Fire Emblem?", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT, SDL_WINDOW_SHOWN)),
+	window_(SDL_CreateWindow("Fire Emblem", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, globals.SCREEN_WIDTH, globals.SCREEN_HEIGHT, SDL_WINDOW_SHOWN)),
 	screen_(SDL_GetWindowSurface(window_)),
 	renderer_(SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED)),
 	scene_(renderer_),camera_(),current_tile_(),player_vector_(std::vector<Character*>()),enemy_vector_(std::vector<Character*>()), character_map_(std::vector<Character*>(scene_.get_level_map_height_tiles()*scene_.get_level_map_width_tiles())),
-	current_player_(nullptr),saved_player_x_(0),saved_player_y_(0), saved_camera_x_(0), saved_camera_y_(0), active_players_(0), player_phase_done_(false),player_menu_()
-
+	current_player_(nullptr), saved_camera_x_(0), saved_camera_y_(0), active_players_(0), player_menu_(), active_enemies_(0)
 {
 }
 
@@ -24,25 +26,13 @@ Game::~Game()
 
 bool Game::init()
 {
-	int g = globals.TILE_SIZE;
 	// load background level
 	scene_.change_level_map(level_,renderer_);
 
 	// load sprite sheets
 	SpriteSheet::init_sprites(renderer_);
 
-	// load players
-	player_vector_.push_back(new Swordsman(0,0,true));
-	active_players_ = player_vector_.size();
-
-	// load enemies
-	enemy_vector_.push_back(new Swordsman(0,3*g,false));
-	enemy_vector_.push_back(new Swordsman(2*g,0,false));
-	enemy_vector_.push_back(new Swordsman(g,0,false));
-	enemy_vector_.push_back(new Swordsman(0,2*g,false));
-	enemy_vector_.push_back(new Swordsman(g,2*g,false));
-	enemy_vector_.push_back(new Swordsman(g,3*g,false));
-
+	create_players();
 	update_player_positions();
 	update_enemy_positions();
 
@@ -128,10 +118,6 @@ void Game::handle_events()
 
 void Game::update()
 {
-	if (active_players_ == 0 || player_phase_done_)
-	{
-		game_state_ = enemy_move;
-	}
 	switch (game_state_)
 	{
 		case none:
@@ -154,6 +140,8 @@ void Game::update()
 			break;
 		case player_attack:
 			break;
+		case enemy_move:
+			move_enemy();
 	}
 }
 
@@ -257,7 +245,7 @@ void Game::move_player()
 
 	if (x_diff == 0 && y_diff == 0)
 	{
-		after_player_move();
+		after_move_player();
 		return;
 	}
 
@@ -281,18 +269,28 @@ void Game::move_player()
 	current_player_->move();
 }
 
-void Game::after_player_move()
+void Game::after_move_player()
 {
 	game_state_ = player_menu;
 	player_menu_.set_can_attack(check_enemies_in_range());
 }
 
+void Game::move_enemy()
+{
+}
+
+void Game::after_move_enemy()
+{
+	// if enemy plans on attack, attack
+	// otherwise, unit is done
+}
+
 void Game::reset_camera()
 {
-	current_player_->set_x(saved_player_x_);
-	current_player_->set_y(saved_player_y_);
-	current_tile_.set_actual_x(saved_player_x_);
-	current_tile_.set_actual_y(saved_player_y_);
+	current_player_->set_x(current_player_->get_old_x());
+	current_player_->set_y(current_player_->get_old_y());
+	current_tile_.set_actual_x(current_player_->get_old_x());
+	current_tile_.set_actual_y(current_player_->get_old_y());
 	camera_.set_camera_x(saved_camera_x_);
 	camera_.set_camera_y(saved_camera_y_);
 }
@@ -307,16 +305,20 @@ void Game::handle_z_press()
 		case none:
 		{
 			Character* temp = character_map_[get_unit_array_pos(current_tile_.get_actual_x(),current_tile_.get_actual_y())];
-			if (temp != nullptr && temp->is_player())
+			if (temp != nullptr && temp->is_player() && !temp->is_grey())
 			{
 				game_state_ = player_select;
 				current_player_ = temp;
 				current_player_->set_state(Character::selected);
-				saved_player_x_ = current_player_->get_x();
-				saved_player_y_ = current_player_->get_y();
+				current_player_->set_old_x(current_player_->get_x());
+				current_player_->set_old_y(current_player_->get_y());
 				saved_camera_x_ = camera_.get_camera_x();
 				saved_camera_y_ = camera_.get_camera_y();
 				return;
+			}
+			else if (temp == nullptr || temp->is_grey())
+			{
+				game_state_ = turn_menu;
 			}
 			break;
 		}
@@ -342,13 +344,19 @@ void Game::handle_z_press()
 			{
 				case PlayerMenu::MenuSelection::wait:
 					game_state_ = none;
-					player_unit_is_done();
+					unit_is_done(current_player_);
 					scene_.movement_grid_not_ready();
 					break;
 				case PlayerMenu::MenuSelection::atk_or_heal:
 					game_state_ = player_attack;
 					break;
+				case PlayerMenu::MenuSelection::item:
+					break;
 			}
+			break;
+		case turn_menu:
+			game_state_ = enemy_move;
+			active_players_ = 0;
 			break;
 	}
 }
@@ -370,6 +378,9 @@ void Game::handle_x_press()
 			break;
 		case player_attack:
 			game_state_ = player_menu;
+			break;
+		case turn_menu:
+			game_state_ = none;
 			break;
 
 	}
@@ -468,12 +479,29 @@ void Game::update_player_positions()
 	}
 }
 
-void Game::player_unit_is_done()
+void Game::unit_is_done(Character* const unit)
 {
-	current_player_->set_state(Character::idle);
-	current_player_->set_grey(true);
-	character_map_[get_unit_array_pos(saved_player_x_,saved_player_y_)] = nullptr;
-	character_map_[get_unit_array_pos(current_player_->get_x(),current_player_->get_y())] = current_player_;
+	unit->set_state(Character::idle);
+	unit->set_grey(true);
+	character_map_[get_unit_array_pos(unit->get_old_x(),unit->get_old_y())] = nullptr;
+	character_map_[get_unit_array_pos(unit->get_x(),unit->get_y())] = unit;
+	if (unit->is_player())
+	{
+		if (--active_players_ == 0)
+		{
+			game_state_ = enemy_move;
+			active_enemies_ = enemy_vector_.size();
+		}
+	}
+	else
+	{
+		if (--active_enemies_ == 0)
+		{
+			game_state_ = none;
+			active_players_ = player_vector_.size();
+			reset_camera(); // reset to MC actually
+		}
+	}
 }
 
 
@@ -494,4 +522,27 @@ void Game::draw_characters()
 	{
 		(*it)->draw(camera_, renderer_);
 	}
+}
+
+void Game::create_players()
+{
+	Character* cur;
+
+	cur = new Swordsman("Eirika",true,0,0,true,Stats(20,10,10,10,10));
+	// give weapons and items
+	// load players
+	player_vector_.push_back(cur);
+
+	// add more players
+
+
+
+	active_players_ = player_vector_.size();
+
+	// load enemies
+	cur = new Swordsman("Enemy",false,0,globals.TILE_SIZE,false,Stats(20,10,10,10,10));
+	// give enemy weapon(s)
+
+	enemy_vector_.push_back(cur);
+
 }

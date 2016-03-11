@@ -1,13 +1,32 @@
 #include "stdafx.h"
 #include "character.h"
 #include "../sprite_sheet.h"
+#include "../Items/Potions/potion.h"
 
-
-Character::Character(int x, int y, int num_steps, int min_attack_range,int max_attack_range, bool is_player, bool is_healer, int y_start): x_(x), y_(y), state_(idle), frame_(0), anim_delay_(100), last_anim_frame_time_(0), num_steps_(num_steps), max_attack_range_(max_attack_range), min_attack_range_(min_attack_range),is_player_(is_player), sprite_y_start_(y_start), grey_(false),can_act_(true),is_healer_(is_healer)
+Character::Character(std::string name, bool is_mc, int x, int y, int num_steps, bool is_player, bool is_healer, Stats stats): 
+	name_(name),is_mc_(is_mc),x_(x), y_(y), old_x_(x),old_y_(y),state_(idle), frame_(0), anim_delay_(100), last_anim_frame_time_(0), num_steps_(num_steps), is_player_(is_player), 
+	sprite_y_start_(SpriteSheet::get_y_start(name)), grey_(false),can_act_(true),is_healer_(is_healer),	stats_(stats),
+	cur_weapon_(nullptr),weapon_list_(std::vector<Weapon*>()),inventory_(std::vector<Item*>())
 {
 }
 
-Character::~Character() {};
+Character::~Character()
+{
+	for (auto it = inventory_.begin(); it != inventory_.end(); ++it)
+	{
+		delete (*it);
+	}
+};
+
+int Character::get_max_attack_range() const
+{
+	return cur_weapon_->get_max_attack_range();
+}
+
+int Character::get_min_attack_range() const
+{
+	return cur_weapon_->get_min_attack_range();
+}
 
 void Character::count_anim_delay()
 {
@@ -59,4 +78,21 @@ void Character::draw(const Camera& camera, SDL_Renderer* renderer)
 	SDL_Rect src_rect = { sprite_start_x + get_frame()*globals.SPRITE_SIZE, get_sprite_y_start() + get_state()*globals.SPRITE_SIZE, globals.SPRITE_SIZE, globals.SPRITE_SIZE };
 
 	SDL_RenderCopy(renderer, SpriteSheet::player_sprites_, &src_rect, &dest_rect);
+}
+
+bool Character::attack(Character* const enemy)
+{
+	// do dmg calcs
+
+}
+
+void Character::give_weapon(Weapon* const weapon)
+{
+	weapon_list_.push_back(weapon);
+	inventory_.push_back(weapon);
+}
+
+void Character::give_item(Item* const item)
+{
+	inventory_.push_back(item);
 }

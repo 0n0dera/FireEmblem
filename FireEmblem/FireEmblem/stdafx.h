@@ -17,6 +17,7 @@
 #include "load_texture.h"
 #include <vector>
 #include <algorithm>
+#include <map>
 
 #undef main
 

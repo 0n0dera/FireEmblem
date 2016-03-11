@@ -3,7 +3,7 @@
 #include "scene.h"
 #include "Characters\character.h"
 
-PlayerMenu::PlayerMenu(void):selection_(0),left_side_(40),right_side_(globals.SCREEN_WIDTH-240),menu_width_(200),menu_y_(40),item_height_(80)
+PlayerMenu::PlayerMenu(void):selection_(0),left_side_(20),right_side_(globals.SCREEN_WIDTH-120),menu_width_(100),menu_y_(20),item_height_(30)
 {
 }
 
@@ -31,7 +31,8 @@ void PlayerMenu::draw_menu(const int x, const Character* const player, SDL_Rende
 	SDL_SetRenderDrawColor(renderer, 50,50,50,255);
 	SDL_RenderFillRect(renderer, &rect);
 	int num_opts = 0;
-	if (player->can_act())
+
+	if (player && player->can_act())
 	{
 		if (!player->is_healer())
 		{
@@ -51,10 +52,12 @@ void PlayerMenu::draw_menu(const int x, const Character* const player, SDL_Rende
 		rect.y = menu_y_ + 10 + num_opts++*item_height_;
 		SDL_RenderFillRect(renderer,&rect);
 	}
-		SDL_SetRenderDrawColor(renderer, 0,0,0,255);
-		rect.y = menu_y_ + 10 + num_opts++*item_height_;
-		SDL_RenderFillRect(renderer,&rect);
+
 	// draw wait
+	SDL_SetRenderDrawColor(renderer, 0,0,0,255);
+	rect.y = menu_y_ + 10 + num_opts++*item_height_;
+	SDL_RenderFillRect(renderer,&rect);
+
 	// draw menu bottom
 	rect.h = 10;
 	SDL_SetRenderDrawColor(renderer, 50,50,50,255);

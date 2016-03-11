@@ -10,6 +10,7 @@ typedef struct
 	static const int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
 	static const int MAX_FRAMESKIP = 5;
 	static const int SPRITE_MOVE_SPEED = 10;
+	static const int ROWS_PER_CLASS = 16;
 } Globals;
 
 extern Globals globals;
