@@ -20,7 +20,7 @@ public:
 	~Weapon(void);
 	int get_max_attack_range() const;
 	int get_min_attack_range() const;
-	void use(const std::shared_ptr<Character> unit) override;
+	void use(const std::shared_ptr<Character>& unit) override;
 	WeaponType get_type() const;
 
 private:

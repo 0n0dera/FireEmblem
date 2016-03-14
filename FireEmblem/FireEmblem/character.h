@@ -27,7 +27,7 @@ public:
 		move_left = 2,
 		attacking = 1
 	};
-	Character(std::string name, CharacterClass c_class, int x, int y, bool is_player, Stats stats);
+	Character(std::string name, CharacterClass c_class, int x, int y, bool is_player);
 	~Character(void);
 
 	std::string get_name() const;
@@ -61,8 +61,11 @@ public:
 	bool is_player() const;
 	bool is_grey() const;
 	void set_grey(bool val);
+	// basically did the player already attack/item (stage b4 grey)
 	bool can_act() const;
 	void set_act(bool val);
+	bool can_attack() const;
+	void set_attack(bool val);
 
 	// stats methods
 	int get_hp() const;
@@ -74,13 +77,14 @@ public:
 	void set_hp(int hp);
 
 	// weapon/item methods
-	void set_weapon(Weapon* const weapon);
-	void give_weapon(const std::shared_ptr<Weapon> weapon);
-	void give_item(const std::shared_ptr<Item> item);
-	bool can_equip(const Weapon* const weapon);
+	void set_weapon(const std::shared_ptr<Weapon>& weapon);
+	void give_weapon(const std::shared_ptr<Weapon>& weapon);
+	void give_item(const std::shared_ptr<Item>& item);
+	bool can_equip(const std::shared_ptr<const Weapon>& weapon);
+	std::vector<std::shared_ptr<Weapon>>& get_weapon_list();
 
 	// attack
-	virtual bool attack(const std::shared_ptr<Character> enemy);
+	virtual bool attack(const std::shared_ptr<Character>& enemy);
 
 
 private:
@@ -111,11 +115,13 @@ private:
 	bool is_player_;
 	bool grey_;
 	bool can_act_;
+	bool can_attack_;
 
 	//stats
 	Stats stats_;
 
 	// items
+	std::shared_ptr<Weapon> null_ptr;
 	std::shared_ptr<Weapon> cur_weapon_;
 	std::vector<std::shared_ptr<Weapon>> weapon_list_;
 	std::vector<std::shared_ptr<Item>> inventory_;
@@ -214,6 +220,14 @@ inline void Character::set_act(bool val)
 {
 	can_act_ = val;
 }
+inline bool Character::can_attack() const
+{
+	return can_attack_;
+}
+inline void Character::set_attack(bool val)
+{
+	can_attack_ = val;
+}
 
 inline int Character::get_hp() const
 {
@@ -251,4 +265,8 @@ inline std::string Character::get_name() const
 inline Character::CharacterClass Character::get_class() const
 {
 	return class_;
+}
+inline std::vector<std::shared_ptr<Weapon>>& Character::get_weapon_list()
+{
+	return weapon_list_;
 }

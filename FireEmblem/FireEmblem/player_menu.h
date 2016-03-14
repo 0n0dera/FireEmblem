@@ -7,36 +7,29 @@ class PlayerMenu
 {
 public:
 	enum MenuSelection{
-		atk_or_heal = 0,
-		item =   1,
-		wait =   2
+		attack = 0,
+		heal = 1,
+		item =   2,
+		wait =   3
 	};
 	PlayerMenu(void);
 	~PlayerMenu(void);
-	void draw(bool left_side, const std::shared_ptr<Character>& player, const Scene& scene, SDL_Renderer* renderer);
+	void draw(bool left_side, const Scene& scene, SDL_Renderer* renderer);
 	int get_selection() const;
 	void inc_selection(int inc);
-	void set_can_attack(bool val);
+	void set_options(const std::shared_ptr<const Character>& player);
 	 
 private:
-	void draw_menu(const int x, const std::shared_ptr<Character>& player, SDL_Renderer* renderer);
+	void draw_menu(const int x, SDL_Renderer* renderer);
 
+	std::vector<MenuSelection> options_vector_;
 	const int left_side_;
 	const int right_side_;
 	const int menu_y_;
 	const int menu_width_;
 	const int item_height_;
+	const int const_num_options_;
 	int selection_;
-	bool can_attack_;
+	int can_attack_;
+	int can_act_;
 };
-
-inline int PlayerMenu::get_selection() const
-{
-	return selection_;
-}
-
-
-inline void PlayerMenu::set_can_attack(bool val)
-{
-	can_attack_ = val;
-}

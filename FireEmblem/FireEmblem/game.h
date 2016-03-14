@@ -43,7 +43,7 @@ private:
 	void move_enemy();
 	void after_move_enemy();
 	void reset_camera(const std::shared_ptr<Character>& unit);
-	void camera_follow(const std::shared_ptr<Character>& unit);
+	void camera_set(const std::shared_ptr<const Character>& unit);
 	
 	// button press handlers
 	void handle_z_press();
@@ -57,12 +57,14 @@ private:
 	bool check_enemies_in_range();
 	
 	// updating position/end of turn methods
-	void update_enemy_positions();
-	void update_player_positions();
+	void update_unit_position(const std::shared_ptr<Character>& unit);
+	void set_enemy_positions();
+	void set_player_positions();
 	void unit_is_done(const std::shared_ptr<Character>& unit);
+	void players_not_grey();
+	void enemies_not_grey();
 
 	// helper methods
-	int get_unit_array_pos(const int x, const int y);
 	void draw_characters();
 	void enemy_phase();
 	void create_players();
@@ -77,11 +79,16 @@ private:
 	Scene scene_;
 	Camera camera_;
 	CurrentTile current_tile_;
+	
+	std::shared_ptr<Character> null_ptr;
 	std::vector<std::shared_ptr<Character>> player_vector_;
 	std::vector<std::shared_ptr<Character>> enemy_vector_;
-	std::vector<Character*> character_map_;
+	std::vector<std::shared_ptr<Character>> character_map_;
 	std::shared_ptr<Character> current_player_;
 	std::shared_ptr<Character> mc_;
+
+	std::vector<std::pair<int,int>> move_path_;
+
 	int saved_camera_x_;
 	int saved_camera_y_;
 	PlayerMenu player_menu_;

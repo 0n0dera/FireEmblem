@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "load_texture.h"
+#include "texture_util.h"
 
-bool texture::load_texture_from_file(const std::string path, SDL_Texture*& texture, SDL_Renderer* renderer)
+bool texture_util::load_texture_from_file(const std::string path, SDL_Texture*& texture, SDL_Renderer* renderer)
 {
 	if (texture != NULL)
 		SDL_DestroyTexture(texture);

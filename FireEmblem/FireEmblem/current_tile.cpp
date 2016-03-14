@@ -1,7 +1,12 @@
 #include "stdafx.h"
 #include "current_tile.h"
 
-CurrentTile::CurrentTile() :actual_x_(0), actual_y_(0), frame_(0), anim_delay_(600), frame_max_(10)
+CurrentTile::CurrentTile():
+	actual_x_(0),
+	actual_y_(0), 
+	frame_(0),
+	anim_delay_(600), 
+	frame_max_(10)
 {
 }
 

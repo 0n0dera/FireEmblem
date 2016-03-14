@@ -12,6 +12,9 @@
 (DONE) Fix up game states input handling (up down left right handlers)
 
 (DONE) When is player/enemy turn done? Also behaviour for enemies.
+(DONE) Made all pointers into smart pointers
+
+- make player move based on arrow (also draw arrow)
 
 *************** - NEW SPRITES and NEW Y_START LOADING******************
 			- map in SpriteSheet
