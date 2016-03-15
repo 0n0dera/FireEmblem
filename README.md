@@ -1,4 +1,3 @@
 # FireEmblem
-Game inspired by Fire Emblem developed in C++/SDL2 using VS2012
+Inspired by Fire Emblem, developed in C++/SDL2 using Visual Studio
 cool stuff soonTM
-
